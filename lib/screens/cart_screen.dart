@@ -4,8 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/cart_service.dart';
 
 class CartScreen extends StatefulWidget {
+  const CartScreen({super.key});
+
   @override
-  _CartScreenState createState() => _CartScreenState();
+  State<CartScreen> createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
@@ -20,11 +22,21 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> loadCart() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt("id") ?? 0;
+
+    if (userId <= 0) {
+      if (!mounted) return;
+      setState(() {
+        cartData = {"data": [], "total": 0};
+        isLoading = false;
+      });
+      return;
+    }
 
     final data = await CartService.getCart(userId);
 
+    if (!mounted) return;
     setState(() {
       cartData = data;
       isLoading = false;
@@ -32,12 +44,32 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> checkout() async {
-    await CartService.checkout(userId);
-    await loadCart();
+    if (userId <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please login again")));
+      return;
+    }
 
+    final result = await CartService.checkout(userId);
+
+    if (!mounted) return;
+
+    if (result['status'] == true) {
+      await loadCart();
+      if (!mounted) return;
+    }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text("Checkout successful")));
+    ).showSnackBar(
+      SnackBar(
+        content: Text(
+          result['status'] == true
+              ? (result['message'] ?? "Checkout successful")
+              : (result['message'] ?? "Checkout failed"),
+        ),
+      ),
+    );
   }
 
   @override
@@ -46,7 +78,7 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(title: Text("My Cart")),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : cartData == null || cartData!['data'].isEmpty
+          : cartData == null || (cartData!['data'] as List).isEmpty
           ? Center(child: Text("Cart is empty"))
           : Column(
               children: [

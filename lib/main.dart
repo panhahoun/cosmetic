@@ -4,32 +4,43 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   Future<bool> checkLogin() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey("id");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = prefs.getInt("id") ?? 0;
+      return id > 0;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: FutureBuilder(
+      home: FutureBuilder<bool>(
         future: checkLogin(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Scaffold(
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
+          if (snapshot.hasError) {
+            return const LoginScreen();
+          }
+
           if (snapshot.data == true) {
-            return HomeScreen();
+            return const HomeScreen();
           } else {
-            return LoginScreen();
+            return const LoginScreen();
           }
         },
       ),

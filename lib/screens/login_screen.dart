@@ -6,14 +6,23 @@ import 'home_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   void login() async {
     setState(() => isLoading = true);
@@ -23,12 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
       passwordController.text,
     );
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
     if (user != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(
@@ -71,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 backgroundColor: AppColors.primary,
                 minimumSize: Size(double.infinity, 50),
               ),
-              onPressed: login,
+              onPressed: isLoading ? null : login,
               child: isLoading
                   ? CircularProgressIndicator(color: Colors.white)
                   : Text("Login"),
@@ -80,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => RegisterScreen()),
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
                 );
               },
               child: Text("Don't have account? Register"),

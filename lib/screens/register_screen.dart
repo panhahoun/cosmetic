@@ -3,8 +3,10 @@ import '../config/app_colors.dart';
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -14,6 +16,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final phoneController = TextEditingController();
 
   bool isLoading = false;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
 
   void register() async {
     setState(() => isLoading = true);
@@ -25,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       phoneController.text,
     );
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
     ScaffoldMessenger.of(context)
@@ -74,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   backgroundColor: AppColors.primary,
                   minimumSize: Size(double.infinity, 50),
                 ),
-                onPressed: register,
+                onPressed: isLoading ? null : register,
                 child: isLoading
                     ? CircularProgressIndicator(color: Colors.white)
                     : Text("Create Account"),
