@@ -1,3 +1,4 @@
+import 'package:cosmetic/screens/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,17 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text("Cosmetic Shop"),
         actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await AuthService.logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-              );
-            },
-          ),
-        ],
+  IconButton(
+    icon: Icon(Icons.shopping_cart),
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CartScreen()),
+      );
+    },
+  ),
+],
       ),
       body: Center(
         child: FutureBuilder<List<Product>>(
