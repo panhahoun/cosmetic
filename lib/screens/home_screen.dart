@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/product_model.dart';
 import '../services/auth_service.dart';
+import '../services/product_service.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -35,17 +38,67 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               await AuthService.logout();
               Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (_) => LoginScreen()));
+                context,
+                MaterialPageRoute(builder: (_) => LoginScreen()),
+              );
             },
-          )
+          ),
         ],
       ),
       body: Center(
-        child: role == "admin"
-            ? Text("Welcome Admin Dashboard")
-            : role == "cashier"
-                ? Text("Welcome Cashier POS")
-                : Text("Welcome User App"),
+        child: FutureBuilder<List<Product>>(
+          future: ProductService.getProducts(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            final products = snapshot.data!;
+
+            return GridView.builder(
+              padding: EdgeInsets.all(10),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Image.network(product.image, fit: BoxFit.cover),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          children: [
+                            Text(
+                              product.name,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "\$${product.price}",
+                              style: TextStyle(
+                                color: Colors.pink,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
