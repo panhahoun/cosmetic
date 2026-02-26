@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../config/app_colors.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
@@ -26,10 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (user != null) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => HomeScreen()));
+        context,
+        MaterialPageRoute(builder: (_) => HomeScreen()),
+      );
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Login failed")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Login failed")));
     }
   }
 
@@ -42,11 +46,14 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Cosmetic Shop",
-                style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary)),
+            Text(
+              "Cosmetic Shop",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
             SizedBox(height: 40),
             TextField(
               controller: emailController,
@@ -61,8 +68,9 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: Size(double.infinity, 50)),
+                backgroundColor: AppColors.primary,
+                minimumSize: Size(double.infinity, 50),
+              ),
               onPressed: login,
               child: isLoading
                   ? CircularProgressIndicator(color: Colors.white)
@@ -70,11 +78,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => RegisterScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => RegisterScreen()),
+                );
               },
               child: Text("Don't have account? Register"),
-            )
+            ),
           ],
         ),
       ),

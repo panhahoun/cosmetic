@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/product_model.dart';
 import '../services/auth_service.dart';
+import '../services/cart_service.dart';
 import '../services/product_service.dart';
 import 'login_screen.dart';
 
@@ -70,24 +71,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Image.network(product.image, fit: BoxFit.cover),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(15),
+                          ),
+                          child: Image.network(
+                            product.image,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               product.name,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
+                            SizedBox(height: 4),
                             Text(
                               "\$${product.price}",
                               style: TextStyle(
                                 color: Colors.pink,
                                 fontWeight: FontWeight.bold,
                               ),
+                            ),
+                            SizedBox(height: 8),
+
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.pink,
+                                minimumSize: Size(double.infinity, 35),
+                              ),
+                              onPressed: () async {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+
+                                int userId = prefs.getInt("id") ?? 0;
+
+                                await CartService.addToCart(
+                                  userId,
+                                  product.id,
+                                  1,
+                                );
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Added to cart")),
+                                );
+                              },
+                              child: Text("Add to Cart"),
                             ),
                           ],
                         ),
