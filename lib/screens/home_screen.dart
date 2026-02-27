@@ -433,12 +433,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: AppColors.textMuted.withAlpha(20),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(10),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+                        color: Colors.black.withAlpha(5),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -447,9 +450,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: tr('search_hint'),
+                      hintStyle: const TextStyle(color: AppColors.textMuted),
                       prefixIcon: const Icon(
                         Icons.search_rounded,
-                        color: AppColors.textMuted,
+                        color: AppColors.primary,
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
@@ -468,7 +472,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       final category = categories[index];
                       final selected = category == _selectedCategory;
                       return ChoiceChip(
-                        label: Text(category),
+                        label: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          child: Text(category),
+                        ),
                         selected: selected,
                         onSelected: (_) {
                           setState(() {
@@ -476,9 +486,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                         selectedColor: AppColors.primary,
+                        backgroundColor: Theme.of(context).cardColor,
+                        side: BorderSide(
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textMuted.withAlpha(20),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         labelStyle: TextStyle(
                           color: selected ? Colors.white : textColor,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.w600,
                         ),
                       );
                     },
@@ -495,15 +516,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
-                                childAspectRatio: 0.68,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.75,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
                               ),
                           itemCount: filtered.length,
                           itemBuilder: (context, index) {
                             final product = filtered[index];
                             return Card(
-                              elevation: 0,
+                              elevation: 8,
                               shadowColor: Colors.black.withAlpha(20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
@@ -512,9 +533,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Theme.of(context).brightness ==
                                           Brightness.dark
                                       ? Colors.white10
-                                      : Colors.black.withAlpha(10),
+                                      : Colors.transparent,
+                                  width: 0.5,
                                 ),
                               ),
+                              clipBehavior: Clip.antiAlias,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(24),
                                 onTap: () {
@@ -547,34 +570,39 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     Expanded(
-                                      flex: 4,
+                                      flex: 3,
                                       child: Stack(
                                         children: [
                                           Padding(
-                                            padding: const EdgeInsets.all(12),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                  product.name,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w800,
-                                                    fontSize: 14,
-                                                    height: 1.2,
-                                                    color: textColor,
+                                                Expanded(
+                                                  child: Text(
+                                                    product.name,
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 14,
+                                                      height: 1.2,
+                                                      color: textColor,
+                                                    ),
                                                   ),
                                                 ),
-                                                const Spacer(),
                                                 Text(
                                                   '\$${product.price.toStringAsFixed(2)}',
                                                   style: const TextStyle(
                                                     color: AppColors.primary,
                                                     fontWeight: FontWeight.w900,
-                                                    fontSize: 18,
+                                                    fontSize: 16,
                                                   ),
                                                 ),
                                               ],
@@ -587,14 +615,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                               onTap: () => _addToCart(product),
                                               child: Container(
                                                 padding: const EdgeInsets.all(
-                                                  14,
+                                                  12,
                                                 ),
                                                 decoration: const BoxDecoration(
                                                   color: AppColors.primary,
                                                   borderRadius:
                                                       BorderRadius.only(
                                                         topLeft:
-                                                            Radius.circular(24),
+                                                            Radius.circular(20),
                                                         bottomRight:
                                                             Radius.circular(24),
                                                       ),
@@ -603,7 +631,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   Icons
                                                       .add_shopping_cart_rounded,
                                                   color: Colors.white,
-                                                  size: 20,
+                                                  size: 18,
                                                 ),
                                               ),
                                             ),
@@ -649,6 +677,17 @@ class ProductDetailScreen extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor.withAlpha(200),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         title: Text(tr('product_detail')),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -693,9 +732,22 @@ class ProductDetailScreen extends StatelessWidget {
                 ],
               ),
               Transform.translate(
-                offset: const Offset(0, -30),
+                offset: const Offset(0, -40),
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -790,9 +842,18 @@ class ProductDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      SizedBox(
+                      Container(
                         width: double.infinity,
                         height: 56,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withAlpha(80),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
@@ -800,8 +861,7 @@ class ProductDetailScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            elevation: 4,
-                            shadowColor: AppColors.primary.withAlpha(100),
+                            elevation: 0,
                           ),
                           onPressed: () async {
                             await onAddToCart(product);

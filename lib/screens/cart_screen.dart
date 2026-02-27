@@ -102,14 +102,21 @@ class _CartScreenState extends State<CartScreen> {
     if (index == 0) Navigator.pop(context);
   }
 
-  Future<void> _openCartItemDetail(Map<String, dynamic> item) async {
-    final shouldCheckout = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => CartItemDetailScreen(item: item)),
-    );
-
-    if (shouldCheckout == true) {
-      await checkout();
+  Future<void> _removeItem(Map<String, dynamic> item) async {
+    // Basic implementation for removing an item locally.
+    // If backend syncing is needed, CartService needs a remove method.
+    final cartList = cartData?['data'] as List?;
+    if (cartList != null) {
+      setState(() {
+        cartList.remove(item);
+        // Recalculate total
+        double newTotal = 0;
+        for (var i in cartList) {
+          newTotal += (i['subtotal'] ?? 0);
+        }
+        cartData?['total'] = newTotal;
+      });
+      // Optionally trigger local save if supported
     }
   }
 
@@ -277,10 +284,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ],
                           ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () => _openCartItemDetail(item),
-                            child: Padding(
+                          child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
@@ -350,8 +354,7 @@ class _CartScreenState extends State<CartScreen> {
                                 ],
                               ),
                             ),
-                          ),
-                        );
+                          );
                       },
                     ),
                   ),
@@ -363,249 +366,3 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
-class CartItemDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> item;
-
-  const CartItemDetailScreen({super.key, required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = AppSettings.instance;
-    final tr = settings.t;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(tr('cart_detail')),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? const [Color(0xFF10131A), Color(0xFF151927)]
-                : const [Color(0xFFFFF5F8), Color(0xFFF8F8FC)],
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  SizedBox(
-                    height: 380,
-                    width: double.infinity,
-                    child: Image.network(
-                      item['image']?.toString() ?? '',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withAlpha(80),
-                            Colors.transparent,
-                            isDark
-                                ? const Color(0xFF10131A)
-                                : const Color(0xFFFFF5F8),
-                          ],
-                          stops: const [0.0, 0.4, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Transform.translate(
-                offset: const Offset(0, -30),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item['name']?.toString() ?? 'Product',
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(5),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              tr('order_summary'),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _detailRow(tr('price'), '\$${item['price'] ?? 0}'),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1),
-                            ),
-                            _detailRow(
-                              tr('quantity'),
-                              '${item['quantity'] ?? 0}',
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  tr('subtotal'),
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  '\$${item['subtotal'] ?? 0}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.primary,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(5),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.local_shipping_outlined,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _detailRow(
-                                    tr('delivery'),
-                                    'Standard (2-4 days)',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.payment_outlined,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _detailRow(
-                                    tr('payment'),
-                                    'Cash on delivery',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            elevation: 4,
-                            shadowColor: AppColors.primary.withAlpha(100),
-                          ),
-                          onPressed: () => Navigator.pop(context, true),
-                          icon: const Icon(Icons.shopping_bag_outlined),
-                          label: Text(
-                            tr('purchase'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(String title, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
-      ],
-    );
-  }
-}

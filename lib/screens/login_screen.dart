@@ -61,9 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFEEF3), Color(0xFFF8F8FC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFDFBFB), Color(0xFFEBEDEE)],
           ),
         ),
         child: SafeArea(
@@ -139,10 +139,41 @@ class _LoginScreenState extends State<LoginScreen> {
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
                                 labelText: tr('email'),
-                                prefixIcon: const Icon(Icons.alternate_email),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                labelStyle: const TextStyle(
+                                  color: AppColors.textMuted,
                                 ),
+                                prefixIcon: const Icon(
+                                  Icons.alternate_email,
+                                  color: AppColors.primary,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: AppColors.textMuted.withAlpha(50),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Colors.redAccent,
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Theme.of(context).cardColor,
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -164,10 +195,41 @@ class _LoginScreenState extends State<LoginScreen> {
                               obscureText: true,
                               decoration: InputDecoration(
                                 labelText: tr('password'),
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                labelStyle: const TextStyle(
+                                  color: AppColors.textMuted,
                                 ),
+                                prefixIcon: const Icon(
+                                  Icons.lock_outline,
+                                  color: AppColors.primary,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: AppColors.textMuted.withAlpha(50),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Colors.redAccent,
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Theme.of(context).cardColor,
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -188,7 +250,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  elevation: 2,
+                                  elevation: 4,
+                                  shadowColor: AppColors.primary.withAlpha(100),
                                 ),
                                 child: isLoading
                                     ? const SizedBox(
@@ -224,7 +287,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: Text(tr('create_account')),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                        ),
+                        child: Text(
+                          tr('create_account'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                   ],
