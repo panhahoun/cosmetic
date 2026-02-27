@@ -58,13 +58,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFDFBFB), Color(0xFFEBEDEE)],
+            colors: isDark
+                ? const [Color(0xFF10131A), Color(0xFF151927)]
+                : const [Color(0xFFFDFBFB), Color(0xFFEBEDEE)],
           ),
         ),
         child: SafeArea(
@@ -92,9 +95,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           child: IconButton(
                             onPressed: () => Navigator.pop(context),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_back_ios_new_rounded,
-                              color: AppColors.textPrimary,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
                               size: 20,
                             ),
                           ),
@@ -107,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -122,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: const [
                           BoxShadow(
@@ -178,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr('Please enter your name');
+                                  return tr('please_enter_name');
                                 }
                                 return null;
                               },
@@ -227,12 +230,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr('Please enter your email');
+                                  return tr('please_enter_email');
                                 }
                                 if (!RegExp(
                                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                                 ).hasMatch(value)) {
-                                  return tr('Please enter a valid email');
+                                  return tr('please_enter_valid_email');
                                 }
                                 return null;
                               },
@@ -281,7 +284,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr('Please enter your phone number');
+                                  return tr('please_enter_phone_number');
                                 }
                                 return null;
                               },
@@ -330,12 +333,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr('Please enter your password');
+                                  return tr('please_enter_password');
                                 }
                                 if (value.length < 6) {
-                                  return tr(
-                                    'Password must be at least 6 characters',
-                                  );
+                                  return tr('password_min_6');
                                 }
                                 return null;
                               },

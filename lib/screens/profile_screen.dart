@@ -29,8 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('name') ?? 'Guest User';
-      userEmail = prefs.getString('email') ?? 'guest@example.com';
+      userName = prefs.getString('name') ?? tr('guest_user');
+      userEmail = prefs.getString('email') ?? tr('guest_email');
     });
   }
 
@@ -105,7 +105,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(letterSpacing: 0.5),
           ),
           centerTitle: false,
-          backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
@@ -202,8 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: tr('order_history'),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Order History coming soon'),
+                          SnackBar(
+                            content: Text(tr('order_history_coming_soon')),
                           ),
                         );
                       },
@@ -217,8 +216,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: tr('shipping_address'),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Shipping Address coming soon'),
+                          SnackBar(
+                            content: Text(tr('shipping_address_coming_soon')),
                           ),
                         );
                       },
@@ -232,8 +231,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: tr('payment_methods'),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Payment Methods coming soon'),
+                          SnackBar(
+                            content: Text(tr('payment_methods_coming_soon')),
                           ),
                         );
                       },

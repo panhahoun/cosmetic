@@ -21,7 +21,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
-  String _selectedPaymentMethod = 'Cash on Delivery';
+  String _selectedPaymentMethod = 'cash';
   bool _isProcessing = false;
 
   AppSettings get _settings => AppSettings.instance;
@@ -45,6 +45,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (isLocalOnly) {
         await CartService.clearLocalCart(widget.userId);
+        await CartService.refreshCartCount(widget.userId);
         result = {
           'status': true,
           'message': tr('order_placed_local'),
@@ -52,8 +53,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         // Mocking 1.5s network delay
         await Future.delayed(const Duration(milliseconds: 1500));
       } else {
-        final paymentMethod =
-            _selectedPaymentMethod == tr('payment_credit_card')
+        final paymentMethod = _selectedPaymentMethod == 'card'
             ? 'card'
             : 'cash';
         result = await CartService.checkout(
@@ -62,6 +62,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
         if (result['status'] == true) {
           await CartService.clearLocalCart(widget.userId);
+          await CartService.refreshCartCount(widget.userId);
         }
       }
 
@@ -261,7 +262,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   children: [
                     _paymentOption(
-                      value: tr('payment_cash_on_delivery'),
+                      value: 'cash',
                       title: tr('payment_cash_on_delivery'),
                     ),
                     Divider(
@@ -269,7 +270,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       height: 1,
                     ),
                     _paymentOption(
-                      value: tr('payment_credit_card'),
+                      value: 'card',
                       title: tr('payment_credit_card'),
                       subtitle: tr('payment_credit_subtitle'),
                     ),

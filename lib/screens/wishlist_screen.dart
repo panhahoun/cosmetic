@@ -67,7 +67,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Future<void> _addToCart(Product product) async {
     if (_userId <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login to add to cart')),
+        SnackBar(content: Text(tr('please_login_add_to_cart'))),
       );
       return;
     }
@@ -81,6 +81,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
       price: product.price,
       quantity: 1,
     );
+    CartService.markCartUpdated();
+    await CartService.refreshCartCount(_userId);
 
     if (mounted) {
       ScaffoldMessenger.of(
@@ -111,7 +113,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
             style: const TextStyle(letterSpacing: 0.5),
           ),
           centerTitle: false,
-          backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
         ),

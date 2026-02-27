@@ -49,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login failed. Please check credentials.'),
+        SnackBar(
+          content: Text(tr('login_failed')),
         ),
       );
     }
@@ -58,13 +58,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFDFBFB), Color(0xFFEBEDEE)],
+            colors: isDark
+                ? const [Color(0xFF10131A), Color(0xFF151927)]
+                : const [Color(0xFFFDFBFB), Color(0xFFEBEDEE)],
           ),
         ),
         child: SafeArea(
@@ -79,10 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     Text(
                       tr('welcome_back'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -121,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: const [
                           BoxShadow(
@@ -178,14 +181,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr(
-                                    'Please enter your email',
-                                  ); // Or use translation if available
+                                  return tr('please_enter_email');
                                 }
                                 if (!RegExp(
                                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                                 ).hasMatch(value)) {
-                                  return tr('Please enter a valid email');
+                                  return tr('please_enter_valid_email');
                                 }
                                 return null;
                               },
@@ -234,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return tr('Please enter your password');
+                                  return tr('please_enter_password');
                                 }
                                 return null;
                               },

@@ -12,7 +12,9 @@ import '../services/wishlist_service.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onOpenCart;
+
+  const HomeScreen({super.key, this.onOpenCart});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Product>> _productsFuture;
   final TextEditingController _searchController = TextEditingController();
   int _cartCount = 0;
+  bool _hasCartUnread = false;
   String _selectedCategory = '';
   Set<int> _favoriteIds = {};
 
@@ -32,8 +35,27 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _productsFuture = ProductService.getProducts();
     _selectedCategory = tr('all');
+    CartService.cartCountNotifier.addListener(_onCartCountChanged);
+    CartService.cartUnreadNotifier.addListener(_onCartUnreadChanged);
+    _hasCartUnread = CartService.cartUnreadNotifier.value;
     _refreshCartCount();
     _checkFavorites();
+  }
+
+  void _onCartCountChanged() {
+    if (!mounted) return;
+    final newCount = CartService.cartCountNotifier.value;
+    if (_cartCount != newCount) {
+      setState(() => _cartCount = newCount);
+    }
+  }
+
+  void _onCartUnreadChanged() {
+    if (!mounted) return;
+    final unread = CartService.cartUnreadNotifier.value;
+    if (_hasCartUnread != unread) {
+      setState(() => _hasCartUnread = unread);
+    }
   }
 
   Future<void> _checkFavorites() async {
@@ -75,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    CartService.cartCountNotifier.removeListener(_onCartCountChanged);
+    CartService.cartUnreadNotifier.removeListener(_onCartUnreadChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -88,34 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshCartCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id') ?? 0;
-
-    if (userId <= 0) {
-      if (!mounted) return;
-      setState(() => _cartCount = 0);
-      return;
-    }
-
-    final remote = await CartService.getCart(userId);
-    List<dynamic> items = remote['data'] is List
-        ? (remote['data'] as List<dynamic>)
-        : [];
-
-    if (items.isEmpty) {
-      final local = await CartService.getLocalCart(userId);
-      items = local['data'] is List ? (local['data'] as List<dynamic>) : [];
-    }
-
-    int totalCount = 0;
-    for (final item in items) {
-      if (item is Map<String, dynamic>) {
-        totalCount += int.tryParse((item['quantity'] ?? 0).toString()) ?? 0;
-      }
-    }
-
+    await CartService.refreshCartCountForCurrentUser();
     if (!mounted) return;
-    setState(() => _cartCount = totalCount);
+    setState(() => _cartCount = CartService.cartCountNotifier.value);
   }
 
   Future<void> _logout() async {
@@ -150,7 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
       quantity: 1,
     );
 
-    await _refreshCartCount();
+    CartService.markCartUpdated();
+    await CartService.refreshCartCount(userId);
 
     if (!mounted) return;
     ScaffoldMessenger.of(
@@ -188,31 +188,21 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.none,
       children: [
         const Icon(Icons.shopping_bag_outlined),
-        if (_cartCount > 0)
+        if (_hasCartUnread)
           Positioned(
-            right: -6,
-            top: -6,
+            right: -3,
+            top: -3,
             child: Container(
-              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: Colors.redAccent,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Theme.of(context).cardColor,
-                  width: 2,
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  width: 1.3,
                 ),
               ),
-              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-              child: Center(
-                child: Text(
-                  _cartCount > 99 ? '99+' : _cartCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
+              width: 10,
+              height: 10,
             ),
           ),
       ],
@@ -372,10 +362,15 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: _buildCartBadgeIcon(),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CartScreen()),
-              ).then((_) => _refreshCartCount());
+              CartService.markCartViewed();
+              if (widget.onOpenCart != null) {
+                widget.onOpenCart!();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CartScreen()),
+                ).then((_) => _refreshCartCount());
+              }
             },
           ),
           IconButton(
@@ -623,31 +618,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   Expanded(
                                     flex: 3,
-                                    child: Stack(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  product.name,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 14,
-                                                    height: 1.2,
-                                                    color: textColor,
-                                                  ),
-                                                ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        12,
+                                        8,
+                                        10,
+                                        8,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              product.name,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 14,
+                                                height: 1.2,
+                                                color: textColor,
                                               ),
+                                            ),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
                                               Text(
                                                 '\$${product.price.toStringAsFixed(2)}',
                                                 style: const TextStyle(
@@ -656,34 +654,39 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   fontSize: 16,
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: GestureDetector(
-                                            onTap: () => _addToCart(product),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: const BoxDecoration(
-                                                color: AppColors.primary,
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(20),
-                                                  bottomRight: Radius.circular(
-                                                    24,
+                                              InkWell(
+                                                onTap: () => _addToCart(product),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                child: Container(
+                                                  width: 38,
+                                                  height: 38,
+                                                  decoration: const BoxDecoration(
+                                                    color: AppColors.primary,
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                14,
+                                                              ),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                14,
+                                                              ),
+                                                        ),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons
+                                                        .add_shopping_cart_rounded,
+                                                    color: Colors.white,
+                                                    size: 18,
                                                   ),
                                                 ),
                                               ),
-                                              child: const Icon(
-                                                Icons.add_shopping_cart_rounded,
-                                                color: Colors.white,
-                                                size: 18,
-                                              ),
-                                            ),
+                                            ],
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -810,7 +813,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ),
         ],
-        title: Text(widget.tr('product_detail')),
+        title: Text(widget.tr('product_detail'), style: const TextStyle(color: Colors.white, backgroundColor: Colors.white10)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),

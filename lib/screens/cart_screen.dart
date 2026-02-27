@@ -17,6 +17,7 @@ class _CartScreenState extends State<CartScreen> {
   Map<String, dynamic>? cartData;
   int userId = 0;
   bool isLoading = true;
+  bool _syncingFromNotifier = false;
 
   AppSettings get _settings => AppSettings.instance;
   String tr(String key) => _settings.t(key);
@@ -24,7 +25,32 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
+    CartService.markCartViewed();
+    CartService.cartCountNotifier.addListener(_onCartCountChanged);
     loadCart();
+  }
+
+  @override
+  void dispose() {
+    CartService.cartCountNotifier.removeListener(_onCartCountChanged);
+    super.dispose();
+  }
+
+  void _onCartCountChanged() {
+    if (!mounted || _syncingFromNotifier) return;
+
+    final items = cartData != null && cartData!['data'] is List
+        ? (cartData!['data'] as List)
+        : <dynamic>[];
+    final visibleCount = _totalItems(items);
+    final targetCount = CartService.cartCountNotifier.value;
+
+    if (visibleCount == targetCount) return;
+
+    _syncingFromNotifier = true;
+    loadCart().whenComplete(() {
+      _syncingFromNotifier = false;
+    });
   }
 
   Future<void> loadCart() async {
@@ -32,6 +58,7 @@ class _CartScreenState extends State<CartScreen> {
     userId = prefs.getInt('id') ?? 0;
 
     if (userId <= 0) {
+      await CartService.refreshCartCount(0);
       if (!mounted) return;
       setState(() {
         cartData = {'data': [], 'total': 0};
@@ -40,28 +67,15 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
-    final data = await CartService.getCart(userId);
-    final remoteItems = data['data'] is List ? (data['data'] as List) : [];
-
-    Map<String, dynamic> resolved = Map<String, dynamic>.from(data);
-    resolved['source'] = 'server';
-
-    if (remoteItems.isEmpty) {
-      final localData = await CartService.getLocalCart(userId);
-      final localItems = localData['data'] is List
-          ? (localData['data'] as List)
-          : [];
-      if (localItems.isNotEmpty) {
-        resolved = Map<String, dynamic>.from(localData);
-        resolved['source'] = 'local';
-      }
-    }
+    final resolved = await CartService.getResolvedCart(userId);
 
     if (!mounted) return;
     setState(() {
       cartData = resolved;
       isLoading = false;
     });
+
+    await CartService.refreshCartCount(userId);
   }
 
   Future<void> checkout() async {
@@ -95,15 +109,123 @@ class _CartScreenState extends State<CartScreen> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Removing server cart items is not supported yet.'),
+      SnackBar(
+        content: Text(tr('remove_server_not_supported')),
       ),
     );
+  }
+
+  Future<void> _changeQuantity(Map<String, dynamic> item, int delta) async {
+    if (userId <= 0 || delta == 0) return;
+
+    final source = (cartData?['source'] ?? '').toString();
+    final productId =
+        int.tryParse((item['product_id'] ?? item['id'] ?? 0).toString()) ?? 0;
+    if (productId <= 0) return;
+
+    if (source == 'local') {
+      final currentQty = int.tryParse((item['quantity'] ?? 0).toString()) ?? 0;
+      final nextQty = currentQty + delta;
+      if (nextQty <= 0) {
+        await CartService.removeLocalCartItem(userId, productId);
+      } else {
+        await CartService.updateLocalCartItemQuantity(userId, productId, nextQty);
+      }
+      await loadCart();
+      return;
+    }
+
+    if (delta > 0) {
+      final result = await CartService.addToCart(userId, productId, delta);
+      if (result['status'] == true) {
+        await loadCart();
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text((result['message'] ?? tr('cart_update_failed')).toString()),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(tr('remove_server_not_supported')),
+      ),
+    );
+  }
+
+  int _totalItems(List<dynamic> items) {
+    var count = 0;
+    for (final item in items) {
+      if (item is Map) {
+        count += int.tryParse((item['quantity'] ?? 0).toString()) ?? 0;
+      }
+    }
+    return count;
   }
 
   String _formatPrice(dynamic value) {
     final amount = double.tryParse(value.toString()) ?? 0;
     return amount.toStringAsFixed(2);
+  }
+
+  Widget _qtyButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: AppColors.primary, size: 16),
+        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+        padding: const EdgeInsets.all(4),
+        visualDensity: VisualDensity.compact,
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _deleteButton({required VoidCallback onPressed}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+        padding: const EdgeInsets.all(4),
+        visualDensity: VisualDensity.compact,
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _qtyValue(dynamic quantity) {
+    return Container(
+      width: 42,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        '${int.tryParse((quantity ?? 0).toString()) ?? 0}',
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
+        ),
+      ),
+    );
   }
 
   Widget _checkoutPanel({required bool enabled}) {
@@ -183,6 +305,7 @@ class _CartScreenState extends State<CartScreen> {
     final items = cartData != null && cartData!['data'] is List
         ? (cartData!['data'] as List)
         : <dynamic>[];
+    final itemCount = _totalItems(items);
 
     return Container(
       decoration: BoxDecoration(
@@ -195,14 +318,13 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         appBar: AppBar(
           title: Text(
             tr('my_cart'),
             style: const TextStyle(letterSpacing: 0.5),
           ),
           centerTitle: false,
-          backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
@@ -241,12 +363,53 @@ class _CartScreenState extends State<CartScreen> {
               )
             : Column(
                 children: [
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(5),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          tr('total_items'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        Text(
+                          '$itemCount',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
                       itemCount: items.length,
                       itemBuilder: (context, index) {
-                        final item = items[index];
+                        final rawItem = items[index];
+                        final item = rawItem is Map
+                            ? Map<String, dynamic>.from(rawItem)
+                            : <String, dynamic>{};
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
@@ -267,7 +430,7 @@ class _CartScreenState extends State<CartScreen> {
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
                                   child: Image.network(
-                                    item['image'],
+                                    (item['image'] ?? '').toString(),
                                     width: 80,
                                     height: 80,
                                     fit: BoxFit.cover,
@@ -280,7 +443,7 @@ class _CartScreenState extends State<CartScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        item['name'],
+                                        (item['name'] ?? '').toString(),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -301,54 +464,41 @@ class _CartScreenState extends State<CartScreen> {
                                               fontSize: 18,
                                             ),
                                           ),
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 4,
+                                          Flexible(
+                                            child: Align(
+                                              alignment: Alignment.centerRight,
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Row(
+                                                  children: [
+                                                    _qtyButton(
+                                                      icon: Icons.add,
+                                                      onPressed: () =>
+                                                          _changeQuantity(
+                                                            item,
+                                                            1,
+                                                          ),
                                                     ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.primary
-                                                      .withAlpha(20),
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Text(
-                                                  '${tr('quantity')}: ${item['quantity']}',
-                                                  style: const TextStyle(
-                                                    color: AppColors.primary,
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.red.withAlpha(
-                                                    20,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.delete_outline,
-                                                    color: Colors.redAccent,
-                                                    size: 20,
-                                                  ),
-                                                  constraints:
-                                                      const BoxConstraints(),
-                                                  padding: const EdgeInsets.all(
-                                                    6,
-                                                  ),
-                                                  onPressed: () =>
-                                                      _removeItem(item),
+                                                    const SizedBox(width: 4),
+                                                    _qtyValue(item['quantity']),
+                                                    const SizedBox(width: 4),
+                                                    _qtyButton(
+                                                      icon: Icons.remove,
+                                                      onPressed: () =>
+                                                          _changeQuantity(
+                                                            item,
+                                                            -1,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    _deleteButton(
+                                                      onPressed: () =>
+                                                          _removeItem(item),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ],
                                       ),

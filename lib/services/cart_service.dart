@@ -1,12 +1,99 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class CartService {
   static String get baseUrl => ApiConfig.endpoint("cart");
+  static final ValueNotifier<int> cartCountNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<bool> cartUnreadNotifier = ValueNotifier<bool>(
+    false,
+  );
 
   static String _localCartKey(int userId) => 'local_cart_$userId';
+
+  static int _itemQuantity(dynamic item) {
+    if (item is Map) {
+      return int.tryParse((item['quantity'] ?? 0).toString()) ?? 0;
+    }
+    return 0;
+  }
+
+  static int _totalQuantity(List<dynamic> items) {
+    var total = 0;
+    for (final item in items) {
+      total += _itemQuantity(item);
+    }
+    return total;
+  }
+
+  static Future<int> getCartCount(int userId) async {
+    if (userId <= 0) return 0;
+
+    final remote = await getCart(userId);
+    final local = await getLocalCart(userId);
+    final remoteItems = remote['data'] is List ? (remote['data'] as List) : [];
+    final localItems = local['data'] is List ? (local['data'] as List) : [];
+    final remoteCount = _totalQuantity(remoteItems);
+    final localCount = _totalQuantity(localItems);
+
+    return localCount > remoteCount ? localCount : remoteCount;
+  }
+
+  static Future<void> refreshCartCount(int userId) async {
+    final total = await getCartCount(userId);
+    cartCountNotifier.value = total;
+  }
+
+  static Future<void> refreshCartCountForCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('id') ?? 0;
+    await refreshCartCount(userId);
+  }
+
+  static void markCartUpdated() {
+    cartUnreadNotifier.value = true;
+  }
+
+  static void markCartViewed() {
+    cartUnreadNotifier.value = false;
+  }
+
+  static Future<Map<String, dynamic>> getResolvedCart(int userId) async {
+    if (userId <= 0) {
+      return {"status": true, "data": [], "total": 0, "source": "local"};
+    }
+
+    final remote = await getCart(userId);
+    final local = await getLocalCart(userId);
+
+    final remoteItems = remote['data'] is List ? (remote['data'] as List) : [];
+    final localItems = local['data'] is List ? (local['data'] as List) : [];
+
+    final remoteCount = _totalQuantity(remoteItems);
+    final localCount = _totalQuantity(localItems);
+
+    if (localCount > remoteCount && localItems.isNotEmpty) {
+      final resolved = Map<String, dynamic>.from(local);
+      resolved['source'] = 'local';
+      return resolved;
+    }
+
+    if (remoteItems.isNotEmpty) {
+      final resolved = Map<String, dynamic>.from(remote);
+      resolved['source'] = 'server';
+      return resolved;
+    }
+
+    if (localItems.isNotEmpty) {
+      final resolved = Map<String, dynamic>.from(local);
+      resolved['source'] = 'local';
+      return resolved;
+    }
+
+    return {"status": true, "data": [], "total": 0, "source": "server"};
+  }
 
   static Map<String, dynamic> _errorMessage(
     String message, {
@@ -213,6 +300,53 @@ class CartService {
       items.removeWhere(
         (item) => (item['product_id'] ?? 0).toString() == productId.toString(),
       );
+
+      await prefs.setString(key, jsonEncode(items));
+    } catch (_) {
+      // Ignore malformed local cache data.
+    }
+  }
+
+  static Future<void> updateLocalCartItemQuantity(
+    int userId,
+    int productId,
+    int quantity,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _localCartKey(userId);
+    final raw = prefs.getString(key);
+
+    if (raw == null || raw.isEmpty) return;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+
+      final items = decoded
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(growable: true);
+
+      final index = items.indexWhere(
+        (item) => (item['product_id'] ?? 0).toString() == productId.toString(),
+      );
+      if (index < 0) return;
+
+      if (quantity <= 0) {
+        items.removeAt(index);
+      } else {
+        final currentQty =
+            int.tryParse((items[index]['quantity'] ?? 1).toString()) ?? 1;
+        final subtotal =
+            double.tryParse((items[index]['subtotal'] ?? '0').toString()) ?? 0;
+        final fallbackPrice = subtotal / (currentQty <= 0 ? 1 : currentQty);
+        final price =
+            double.tryParse((items[index]['price'] ?? '0').toString()) ??
+            fallbackPrice;
+
+        items[index]['quantity'] = quantity;
+        items[index]['price'] = price.toStringAsFixed(2);
+        items[index]['subtotal'] = (price * quantity).toStringAsFixed(2);
+      }
 
       await prefs.setString(key, jsonEncode(items));
     } catch (_) {

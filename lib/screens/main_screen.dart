@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/app_colors.dart';
 import '../config/app_settings.dart';
+import '../services/cart_service.dart';
 import 'cart_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -17,24 +18,67 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
-
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const WishlistScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pages = [
+      HomeScreen(onOpenCart: () => _onBottomNavTapped(2)),
+      const WishlistScreen(),
+      const CartScreen(),
+      const ProfileScreen(),
+    ];
+    CartService.refreshCartCountForCurrentUser();
+    if (_currentIndex == 2) {
+      CartService.markCartViewed();
+    }
   }
 
   void _onBottomNavTapped(int index) {
+    if (index == 2) {
+      CartService.markCartViewed();
+    }
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  Widget _cartNavIcon({required bool selected}) {
+    final baseIcon = Icon(
+      selected ? Icons.shopping_bag_rounded : Icons.shopping_bag_outlined,
+      color: selected ? AppColors.primary : null,
+    );
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: CartService.cartUnreadNotifier,
+      builder: (context, hasUnread, child) {
+        if (!hasUnread) return baseIcon;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            baseIcon,
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    width: 1.3,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // To build Cart Badge inside MainScreen, we should fetch count somehow, or simply show icon.
@@ -78,11 +122,8 @@ class _MainScreenState extends State<MainScreen> {
               label: tr('wishlist'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.shopping_bag_outlined),
-              selectedIcon: const Icon(
-                Icons.shopping_bag_rounded,
-                color: AppColors.primary,
-              ),
+              icon: _cartNavIcon(selected: false),
+              selectedIcon: _cartNavIcon(selected: true),
               label: tr('cart'),
             ),
             NavigationDestination(
