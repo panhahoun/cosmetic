@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../config/app_settings.dart';
 import '../services/cart_service.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -64,60 +65,45 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> checkout() async {
+    if (userId <= 0 || cartData == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CheckoutScreen(userId: userId, cartData: cartData!),
+      ),
+    );
+
+    if (result == true) {
+      // Checkout successful
+      await loadCart();
+    }
+  }
+
+  Future<void> _removeItem(Map<String, dynamic> item) async {
     if (userId <= 0) return;
 
-    final isLocalOnly = cartData?['source'] == 'local';
-    if (isLocalOnly) {
-      await CartService.clearLocalCart(userId);
+    final source = (cartData?['source'] ?? '').toString();
+    final productId =
+        int.tryParse((item['product_id'] ?? item['id'] ?? 0).toString()) ?? 0;
+
+    if (source == 'local' && productId > 0) {
+      await CartService.removeLocalCartItem(userId, productId);
       await loadCart();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('purchase'))));
       return;
     }
 
-    final result = await CartService.checkout(userId);
-
     if (!mounted) return;
-
-    if (result['status'] == true) {
-      await CartService.clearLocalCart(userId);
-      await loadCart();
-      if (!mounted) return;
-    }
-
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result['status'] == true
-              ? (result['message'] ?? tr('checkout'))
-              : (result['message'] ?? 'Checkout failed'),
-        ),
+      const SnackBar(
+        content: Text('Removing server cart items is not supported yet.'),
       ),
     );
   }
 
-  void _onBottomNavTapped(int index) {
-    if (index == 0) Navigator.pop(context);
-  }
-
-  Future<void> _removeItem(Map<String, dynamic> item) async {
-    // Basic implementation for removing an item locally.
-    // If backend syncing is needed, CartService needs a remove method.
-    final cartList = cartData?['data'] as List?;
-    if (cartList != null) {
-      setState(() {
-        cartList.remove(item);
-        // Recalculate total
-        double newTotal = 0;
-        for (var i in cartList) {
-          newTotal += (i['subtotal'] ?? 0);
-        }
-        cartData?['total'] = newTotal;
-      });
-      // Optionally trigger local save if supported
-    }
+  String _formatPrice(dynamic value) {
+    final amount = double.tryParse(value.toString()) ?? 0;
+    return amount.toStringAsFixed(2);
   }
 
   Widget _checkoutPanel({required bool enabled}) {
@@ -152,7 +138,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               Text(
-                '\$$total',
+                '\$${_formatPrice(total)}',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
@@ -198,65 +184,55 @@ class _CartScreenState extends State<CartScreen> {
         ? (cartData!['data'] as List)
         : <dynamic>[];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr('my_cart'), style: const TextStyle(letterSpacing: 0.5)),
-        centerTitle: false,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          selectedIndex: 1,
-          elevation: 0,
-          onDestinationSelected: _onBottomNavTapped,
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(
-                Icons.home_rounded,
-                color: AppColors.primary,
-              ),
-              label: tr('home'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.shopping_bag_outlined),
-              selectedIcon: const Icon(
-                Icons.shopping_bag_rounded,
-                color: AppColors.primary,
-              ),
-              label: tr('cart'),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: Theme.of(context).brightness == Brightness.dark
+              ? const [Color(0xFF10131A), Color(0xFF151927)]
+              : const [Color(0xFFFFF5F8), Color(0xFFF8F8FC)],
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: Theme.of(context).brightness == Brightness.dark
-                ? const [Color(0xFF10131A), Color(0xFF151927)]
-                : const [Color(0xFFFFF5F8), Color(0xFFF8F8FC)],
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            tr('my_cart'),
+            style: const TextStyle(letterSpacing: 0.5),
           ),
+          centerTitle: false,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
         ),
-        child: isLoading
+
+        body: isLoading
             ? const Center(child: CircularProgressIndicator())
             : items.isEmpty
             ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Center(
-                      child: Text(
-                        tr('cart_empty'),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.remove_shopping_cart_rounded,
+                            size: 80,
+                            color: AppColors.textMuted.withAlpha(80),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            tr('cart_empty'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -285,76 +261,104 @@ class _CartScreenState extends State<CartScreen> {
                             ],
                           ),
                           child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.network(
-                                      item['image'],
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    ),
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    item['image'],
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item['name'],
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 16,
-                                          ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item['name'],
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 16,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              '\$${item['subtotal']}',
-                                              style: const TextStyle(
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 18,
-                                              ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '\$${_formatPrice(item['subtotal'])}',
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 18,
                                             ),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 4,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.primary
+                                                      .withAlpha(20),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: Text(
+                                                  '${tr('quantity')}: ${item['quantity']}',
+                                                  style: const TextStyle(
+                                                    color: AppColors.primary,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 13,
                                                   ),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.primary
-                                                    .withAlpha(20),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: Text(
-                                                '${tr('quantity')}: ${item['quantity']}',
-                                                style: const TextStyle(
-                                                  color: AppColors.primary,
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 13,
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.red.withAlpha(
+                                                    20,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    color: Colors.redAccent,
+                                                    size: 20,
+                                                  ),
+                                                  constraints:
+                                                      const BoxConstraints(),
+                                                  padding: const EdgeInsets.all(
+                                                    6,
+                                                  ),
+                                                  onPressed: () =>
+                                                      _removeItem(item),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          );
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -365,4 +369,3 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 }
-

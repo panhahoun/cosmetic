@@ -92,10 +92,13 @@ class CartService {
     }
   }
 
-  static Future<Map<String, dynamic>> checkout(int userId) async {
+  static Future<Map<String, dynamic>> checkout(
+    int userId, {
+    String paymentMethod = "cash",
+  }) async {
     return _postWithFallback("checkout.php", {
       "user_id": userId,
-      "payment_method": "cash",
+      "payment_method": paymentMethod,
     });
   }
 
@@ -190,5 +193,30 @@ class CartService {
   static Future<void> clearLocalCart(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localCartKey(userId));
+  }
+
+  static Future<void> removeLocalCartItem(int userId, int productId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _localCartKey(userId);
+    final raw = prefs.getString(key);
+
+    if (raw == null || raw.isEmpty) return;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+
+      final items = decoded
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(growable: true);
+
+      items.removeWhere(
+        (item) => (item['product_id'] ?? 0).toString() == productId.toString(),
+      );
+
+      await prefs.setString(key, jsonEncode(items));
+    } catch (_) {
+      // Ignore malformed local cache data.
+    }
   }
 }
