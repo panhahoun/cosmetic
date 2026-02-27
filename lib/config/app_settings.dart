@@ -28,16 +28,24 @@ class AppSettings extends ChangeNotifier {
   }
 
   Future<void> toggleTheme() async {
-    _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    _themeMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeKey, _themeMode == ThemeMode.dark ? 'dark' : 'light');
+    await prefs.setString(
+      _themeKey,
+      _themeMode == ThemeMode.dark ? 'dark' : 'light',
+    );
     notifyListeners();
   }
 
   Future<void> setLanguage(AppLanguage language) async {
     _language = language;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_languageKey, language == AppLanguage.khmer ? 'km' : 'en');
+    await prefs.setString(
+      _languageKey,
+      language == AppLanguage.khmer ? 'km' : 'en',
+    );
     notifyListeners();
   }
 

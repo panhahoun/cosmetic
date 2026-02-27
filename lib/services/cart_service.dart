@@ -13,12 +13,7 @@ class CartService {
     List<dynamic>? data,
     dynamic total,
   }) {
-    return {
-      "status": false,
-      "message": message,
-      "data": data,
-      "total": total,
-    };
+    return {"status": false, "message": message, "data": data, "total": total};
   }
 
   static Future<Map<String, dynamic>> _postWithFallback(
@@ -72,8 +67,9 @@ class CartService {
 
   static Future<Map<String, dynamic>> getCart(int userId) async {
     try {
-      final response = await http.get(
-          Uri.parse("$baseUrl/get_cart.php?user_id=$userId")).timeout(ApiConfig.timeout);
+      final response = await http
+          .get(Uri.parse("$baseUrl/get_cart.php?user_id=$userId"))
+          .timeout(ApiConfig.timeout);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return _errorMessage(
@@ -97,22 +93,22 @@ class CartService {
   }
 
   static Future<Map<String, dynamic>> checkout(int userId) async {
-    return _postWithFallback(
-      "checkout.php",
-      {"user_id": userId, "payment_method": "cash"},
-    );
+    return _postWithFallback("checkout.php", {
+      "user_id": userId,
+      "payment_method": "cash",
+    });
   }
 
   static Future<Map<String, dynamic>> addToCart(
-      int userId, int productId, int quantity) async {
-    return _postWithFallback(
-      "add_to_cart.php",
-      {
-        "user_id": userId,
-        "product_id": productId,
-        "quantity": quantity,
-      },
-    );
+    int userId,
+    int productId,
+    int quantity,
+  ) async {
+    return _postWithFallback("add_to_cart.php", {
+      "user_id": userId,
+      "product_id": productId,
+      "quantity": quantity,
+    });
   }
 
   static Future<void> addLocalCartItem({
@@ -127,8 +123,9 @@ class CartService {
     final key = _localCartKey(userId);
 
     final raw = prefs.getString(key);
-    final List<dynamic> decoded =
-        raw == null ? [] : (jsonDecode(raw) as List<dynamic>);
+    final List<dynamic> decoded = raw == null
+        ? []
+        : (jsonDecode(raw) as List<dynamic>);
     final items = decoded
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList(growable: true);
@@ -177,17 +174,14 @@ class CartService {
 
       double total = 0;
       for (final item in items) {
-        final subtotal = double.tryParse((item['subtotal'] ?? '0').toString()) ??
+        final subtotal =
+            double.tryParse((item['subtotal'] ?? '0').toString()) ??
             ((double.tryParse((item['price'] ?? '0').toString()) ?? 0) *
                 (int.tryParse((item['quantity'] ?? '0').toString()) ?? 0));
         total += subtotal;
       }
 
-      return {
-        "status": true,
-        "data": items,
-        "total": total.toStringAsFixed(2),
-      };
+      return {"status": true, "data": items, "total": total.toStringAsFixed(2)};
     } catch (_) {
       return {"status": true, "data": [], "total": 0};
     }

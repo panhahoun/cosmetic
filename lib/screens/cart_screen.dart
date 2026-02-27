@@ -47,8 +47,9 @@ class _CartScreenState extends State<CartScreen> {
 
     if (remoteItems.isEmpty) {
       final localData = await CartService.getLocalCart(userId);
-      final localItems =
-          localData['data'] is List ? (localData['data'] as List) : [];
+      final localItems = localData['data'] is List
+          ? (localData['data'] as List)
+          : [];
       if (localItems.isNotEmpty) {
         resolved = Map<String, dynamic>.from(localData);
         resolved['source'] = 'local';
@@ -70,8 +71,9 @@ class _CartScreenState extends State<CartScreen> {
       await CartService.clearLocalCart(userId);
       await loadCart();
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tr('purchase'))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('purchase'))));
       return;
     }
 
@@ -115,11 +117,18 @@ class _CartScreenState extends State<CartScreen> {
     final total = cartData?['total'] ?? 0;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(5),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -129,27 +138,46 @@ class _CartScreenState extends State<CartScreen> {
             children: [
               Text(
                 tr('total'),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textMuted,
+                ),
               ),
               Text(
                 '\$$total',
                 style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
                   color: AppColors.primary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 46,
+            height: 54,
             child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shadowColor: AppColors.primary.withAlpha(80),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
               onPressed: enabled ? checkout : null,
               icon: const Icon(Icons.shopping_bag_outlined),
-              label: Text(tr('checkout')),
+              label: Text(
+                tr('checkout'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ),
           ),
         ],
@@ -164,22 +192,43 @@ class _CartScreenState extends State<CartScreen> {
         : <dynamic>[];
 
     return Scaffold(
-      appBar: AppBar(title: Text(tr('my_cart'))),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 1,
-        onDestinationSelected: _onBottomNavTapped,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.storefront_outlined),
-            selectedIcon: const Icon(Icons.storefront),
-            label: tr('home'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            selectedIcon: const Icon(Icons.shopping_cart),
-            label: tr('cart'),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text(tr('my_cart'), style: const TextStyle(letterSpacing: 0.5)),
+        centerTitle: false,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          selectedIndex: 1,
+          elevation: 0,
+          onDestinationSelected: _onBottomNavTapped,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(
+                Icons.home_rounded,
+                color: AppColors.primary,
+              ),
+              label: tr('home'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.shopping_bag_outlined),
+              selectedIcon: const Icon(
+                Icons.shopping_bag_rounded,
+                color: AppColors.primary,
+              ),
+              label: tr('cart'),
+            ),
+          ],
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -194,61 +243,121 @@ class _CartScreenState extends State<CartScreen> {
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : items.isEmpty
-                ? Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            tr('cart_empty'),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
+            ? Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        tr('cart_empty'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      _checkoutPanel(enabled: false),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(10),
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    item['image'],
-                                    width: 58,
-                                    height: 58,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                title: Text(
-                                  item['name'],
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${tr('quantity')}: ${item['quantity']}  •  \$${item['subtotal']}',
-                                ),
-                                trailing: const Icon(Icons.chevron_right_rounded),
-                                onTap: () => _openCartItemDetail(item),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      _checkoutPanel(enabled: true),
-                    ],
+                    ),
                   ),
+                  _checkoutPanel(enabled: false),
+                ],
+              )
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(5),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => _openCartItemDetail(item),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      item['image'],
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item['name'],
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '\$${item['subtotal']}',
+                                              style: const TextStyle(
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary
+                                                    .withAlpha(20),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Text(
+                                                '${tr('quantity')}: ${item['quantity']}',
+                                                style: const TextStyle(
+                                                  color: AppColors.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  _checkoutPanel(enabled: true),
+                ],
+              ),
       ),
     );
   }
@@ -263,79 +372,218 @@ class CartItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = AppSettings.instance;
     final tr = settings.t;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: Text(tr('cart_detail'))),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text(tr('cart_detail')),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: Theme.of(context).brightness == Brightness.dark
+            colors: isDark
                 ? const [Color(0xFF10131A), Color(0xFF151927)]
                 : const [Color(0xFFFFF5F8), Color(0xFFF8F8FC)],
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  item['image']?.toString() ?? '',
-                  width: double.infinity,
-                  height: 240,
-                  fit: BoxFit.cover,
-                ),
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 380,
+                    width: double.infinity,
+                    child: Image.network(
+                      item['image']?.toString() ?? '',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withAlpha(80),
+                            Colors.transparent,
+                            isDark
+                                ? const Color(0xFF10131A)
+                                : const Color(0xFFFFF5F8),
+                          ],
+                          stops: const [0.0, 0.4, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                item['name']?.toString() ?? 'Product',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 12),
-              Card(
+              Transform.translate(
+                offset: const Offset(0, -30),
                 child: Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        tr('order_summary'),
+                        item['name']?.toString() ?? 'Product',
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _detailRow(tr('price'), '\$${item['price'] ?? 0}'),
-                      _detailRow(tr('quantity'), '${item['quantity'] ?? 0}'),
-                      _detailRow(tr('subtotal'), '\$${item['subtotal'] ?? 0}'),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(5),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('order_summary'),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _detailRow(tr('price'), '\$${item['price'] ?? 0}'),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1),
+                            ),
+                            _detailRow(
+                              tr('quantity'),
+                              '${item['quantity'] ?? 0}',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  tr('subtotal'),
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${item['subtotal'] ?? 0}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(5),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.local_shipping_outlined,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _detailRow(
+                                    tr('delivery'),
+                                    'Standard (2-4 days)',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1),
+                            ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.payment_outlined,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _detailRow(
+                                    tr('payment'),
+                                    'Cash on delivery',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 4,
+                            shadowColor: AppColors.primary.withAlpha(100),
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          icon: const Icon(Icons.shopping_bag_outlined),
+                          label: Text(
+                            tr('purchase'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    children: [
-                      _detailRow(tr('delivery'), 'Standard (2-4 days)'),
-                      const SizedBox(height: 8),
-                      _detailRow(tr('payment'), 'Cash on delivery'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(tr('purchase')),
                 ),
               ),
             ],
@@ -349,8 +597,14 @@ class CartItemDetailScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(color: AppColors.textMuted)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
       ],
     );
   }

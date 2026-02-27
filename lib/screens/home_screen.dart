@@ -58,8 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final remote = await CartService.getCart(userId);
-    List<dynamic> items =
-        remote['data'] is List ? (remote['data'] as List<dynamic>) : [];
+    List<dynamic> items = remote['data'] is List
+        ? (remote['data'] as List<dynamic>)
+        : [];
 
     if (items.isEmpty) {
       final local = await CartService.getLocalCart(userId);
@@ -93,8 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (userId <= 0) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Please login again')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please login again')));
       return;
     }
 
@@ -111,8 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await _refreshCartCount();
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(tr('added_to_cart'))));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('added_to_cart'))));
   }
 
   void _onBottomNavTapped(int index) {
@@ -136,7 +139,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final query = _searchController.text.trim().toLowerCase();
 
     return products.where((product) {
-      final byCategory = _selectedCategory == tr('all') ||
+      final byCategory =
+          _selectedCategory == tr('all') ||
           product.categoryName.toLowerCase() == _selectedCategory.toLowerCase();
       if (!byCategory) return false;
 
@@ -152,25 +156,30 @@ class _HomeScreenState extends State<HomeScreen> {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        const Icon(Icons.shopping_cart_outlined),
+        const Icon(Icons.shopping_bag_outlined),
         if (_cartCount > 0)
           Positioned(
             right: -6,
             top: -6,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).cardColor,
+                  width: 2,
+                ),
               ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                _cartCount > 99 ? '99+' : _cartCount.toString(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              child: Center(
+                child: Text(
+                  _cartCount > 99 ? '99+' : _cartCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),
@@ -192,39 +201,86 @@ class _HomeScreenState extends State<HomeScreen> {
             final isKhmer = _settings.language == AppLanguage.khmer;
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                   Text(
                     tr('settings'),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(tr('dark_mode')),
-                    value: isDark,
-                    onChanged: (_) async {
-                      await _settings.toggleTheme();
-                      if (!mounted) return;
-                      setState(() {});
-                      setModalState(() {});
-                    },
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF2A2D3E)
+                          : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        tr('dark_mode'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      value: isDark,
+                      activeTrackColor: AppColors.primary,
+                      onChanged: (_) async {
+                        await _settings.toggleTheme();
+                        if (!mounted) return;
+                        setState(() {});
+                        setModalState(() {});
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
                   Text(
                     tr('language'),
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: AppColors.textMuted,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: ChoiceChip(
-                          label: Text(tr('english')),
+                          label: Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              tr('english'),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
                           selected: !isKhmer,
+                          selectedColor: AppColors.primary.withAlpha(40),
+                          checkmarkColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           onSelected: (_) async {
                             await _settings.setLanguage(AppLanguage.english);
                             if (!mounted) return;
@@ -233,11 +289,23 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: ChoiceChip(
-                          label: Text(tr('khmer')),
+                          label: Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              tr('khmer'),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
                           selected: isKhmer,
+                          selectedColor: AppColors.primary.withAlpha(40),
+                          checkmarkColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           onSelected: (_) async {
                             await _settings.setLanguage(AppLanguage.khmer);
                             if (!mounted) return;
@@ -265,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('shop')),
+        title: Text(tr('shop'), style: const TextStyle(letterSpacing: 0.5)),
+        centerTitle: false,
         actions: [
           IconButton(
             icon: _buildCartBadgeIcon(),
@@ -277,30 +346,49 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: _openSettingsSheet,
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
             onPressed: _logout,
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: _onBottomNavTapped,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.storefront_outlined),
-            selectedIcon: const Icon(Icons.storefront),
-            label: tr('home'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            selectedIcon: const Icon(Icons.shopping_cart),
-            label: tr('cart'),
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          selectedIndex: 0,
+          onDestinationSelected: _onBottomNavTapped,
+          elevation: 0,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(
+                Icons.home_rounded,
+                color: AppColors.primary,
+              ),
+              label: tr('home'),
+            ),
+            NavigationDestination(
+              icon: _buildCartBadgeIcon(),
+              selectedIcon: const Icon(
+                Icons.shopping_bag_rounded,
+                color: AppColors.primary,
+              ),
+              label: tr('cart'),
+            ),
+          ],
+        ),
       ),
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
@@ -342,35 +430,33 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 Container(
-                  margin: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tr('find_daily'),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
                       ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: tr('search_hint'),
-                          prefixIcon: const Icon(Icons.search),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    
                     ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: tr('search_hint'),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: AppColors.textMuted,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(
@@ -408,17 +494,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.68,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.68,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                              ),
                           itemCount: filtered.length,
                           itemBuilder: (context, index) {
                             final product = filtered[index];
                             return Card(
+                              elevation: 0,
+                              shadowColor: Colors.black.withAlpha(20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                side: BorderSide(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white10
+                                      : Colors.black.withAlpha(10),
+                                ),
+                              ),
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(24),
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -435,10 +533,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(
+                                      flex: 5,
                                       child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(18),
-                                        ),
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                              top: Radius.circular(24),
+                                            ),
                                         child: Image.network(
                                           product.image,
                                           width: double.infinity,
@@ -446,36 +546,66 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                    Expanded(
+                                      flex: 4,
+                                      child: Stack(
                                         children: [
-                                          Text(
-                                            product.name,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              color: textColor,
+                                          Padding(
+                                            padding: const EdgeInsets.all(12),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  product.name,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 14,
+                                                    height: 1.2,
+                                                    color: textColor,
+                                                  ),
+                                                ),
+                                                const Spacer(),
+                                                Text(
+                                                  '\$${product.price.toStringAsFixed(2)}',
+                                                  style: const TextStyle(
+                                                    color: AppColors.primary,
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            '\$${product.price.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            height: 36,
-                                            child: ElevatedButton(
-                                              onPressed: () => _addToCart(product),
-                                              child: Text(tr('add_to_cart')),
+                                          Positioned(
+                                            bottom: 0,
+                                            right: 0,
+                                            child: GestureDetector(
+                                              onTap: () => _addToCart(product),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  14,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: AppColors.primary,
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(24),
+                                                        bottomRight:
+                                                            Radius.circular(24),
+                                                      ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons
+                                                      .add_shopping_cart_rounded,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -517,7 +647,12 @@ class ProductDetailScreen extends StatelessWidget {
         : const [Color(0xFFFFF5F8), Color(0xFFF8F8FC)];
 
     return Scaffold(
-      appBar: AppBar(title: Text(tr('product_detail'))),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text(tr('product_detail')),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -530,102 +665,162 @@ class ProductDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(24),
-                ),
-                child: SizedBox(
-                  height: 320,
-                  width: double.infinity,
-                  child: Image.network(
-                    product.image,
-                    fit: BoxFit.cover,
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 400,
+                    width: double.infinity,
+                    child: Image.network(product.image, fit: BoxFit.cover),
                   ),
-                ),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withAlpha(80),
+                            Colors.transparent,
+                            isDark
+                                ? const Color(0xFF10131A)
+                                : const Color(0xFFFFF5F8),
+                          ],
+                          stops: const [0.0, 0.4, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        height: 1.2,
-                        fontWeight: FontWeight.w700,
+              Transform.translate(
+                offset: const Offset(0, -30),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          height: 1.2,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '\$${product.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${product.price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(30),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${product.rating}',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _MetaTile(
-                            label: tr('brand'),
-                            value: product.brand,
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _MetaTile(
+                              icon: Icons.sell_outlined,
+                              label: tr('brand'),
+                              value: product.brand,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _MetaTile(
+                              icon: Icons.category_outlined,
+                              label: tr('category'),
+                              value: product.categoryName,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        tr('description'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        product.description.isNotEmpty
+                            ? product.description
+                            : 'Premium skincare product for daily routine.',
+                        style: const TextStyle(
+                          height: 1.6,
+                          color: AppColors.textMuted,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 4,
+                            shadowColor: AppColors.primary.withAlpha(100),
+                          ),
+                          onPressed: () async {
+                            await onAddToCart(product);
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.shopping_bag_outlined),
+                          label: Text(
+                            tr('add_to_cart'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _MetaTile(
-                            label: tr('rating'),
-                            value: '${product.rating} / 5',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      tr('description'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.description.isNotEmpty
-                          ? product.description
-                          : 'Premium skincare product for daily routine.',
-                      style: const TextStyle(
-                        height: 1.5,
-                        color: AppColors.textMuted,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () async {
-                          await onAddToCart(product);
-                          if (!context.mounted) return;
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          tr('add_to_cart'),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -639,33 +834,63 @@ class ProductDetailScreen extends StatelessWidget {
 class _MetaTile extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
 
-  const _MetaTile({required this.label, required this.value});
+  const _MetaTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 12,
-            ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -679,11 +904,7 @@ class _StateMessage extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onPressed;
 
-  const _StateMessage({
-    required this.title,
-    this.actionLabel,
-    this.onPressed,
-  });
+  const _StateMessage({required this.title, this.actionLabel, this.onPressed});
 
   @override
   Widget build(BuildContext context) {

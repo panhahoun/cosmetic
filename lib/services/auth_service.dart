@@ -20,7 +20,7 @@ class AuthService {
           .post(
             Uri.parse("$baseUrl/register.php"),
             headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
+            body: jsonEncode({
               "name": name,
               "email": email,
               "password": password,

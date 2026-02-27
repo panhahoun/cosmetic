@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config/app_colors.dart';
 import 'config/app_settings.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,16 +13,6 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  Future<bool> checkLogin() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final id = prefs.getInt('id') ?? 0;
-      return id > 0;
-    } catch (_) {
-      return false;
-    }
-  }
 
   ThemeData _buildTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
@@ -39,7 +27,9 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: isDark ? const Color(0xFF10131A) : AppColors.background,
+      scaffoldBackgroundColor: isDark
+          ? const Color(0xFF10131A)
+          : AppColors.background,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -59,7 +49,10 @@ class MyApp extends StatelessWidget {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: isDark ? const Color(0xFF2B3040) : AppColors.primary,
-        contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       cardTheme: CardThemeData(
@@ -84,22 +77,7 @@ class MyApp extends StatelessWidget {
           theme: _buildTheme(Brightness.light),
           darkTheme: _buildTheme(Brightness.dark),
           themeMode: AppSettings.instance.themeMode,
-          home: FutureBuilder<bool>(
-            future: checkLogin(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (snapshot.hasError || snapshot.data != true) {
-                return const LoginScreen();
-              }
-
-              return const HomeScreen();
-            },
-          ),
+          home: const SplashScreen(),
         );
       },
     );

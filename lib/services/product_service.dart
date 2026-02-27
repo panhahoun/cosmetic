@@ -9,8 +9,9 @@ class ProductService {
 
   static Future<List<Product>> getProducts() async {
     try {
-      final response =
-          await http.get(Uri.parse("$baseUrl/get_products.php")).timeout(ApiConfig.timeout);
+      final response = await http
+          .get(Uri.parse("$baseUrl/get_products.php"))
+          .timeout(ApiConfig.timeout);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return _loadSeedProducts();
@@ -36,7 +37,9 @@ class ProductService {
 
   static Future<List<Product>> _loadSeedProducts() async {
     try {
-      final rawJson = await rootBundle.loadString('assets/data/products_seed.json');
+      final rawJson = await rootBundle.loadString(
+        'assets/data/products_seed.json',
+      );
       final data = jsonDecode(rawJson);
 
       if (data is List) {
