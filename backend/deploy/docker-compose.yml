@@ -1,0 +1,26 @@
+services:
+  cosmetic-api:
+    build: ..
+    container_name: cosmetic_api
+    restart: always
+    env_file:
+      - .env
+    environment:
+      # Absolute path so the value does not depend on WORKDIR.
+      DATABASE_URL: sqlite:////app/data/cosmetic_store.db
+    ports:
+      - "127.0.0.1:8002:8000"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import urllib.request, sys
+          sys.exit(0 if urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=2).status == 200 else 1)
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

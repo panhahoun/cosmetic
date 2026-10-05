@@ -27,18 +27,21 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: int.parse(json['id'].toString()),
-      name: json['name'],
-      description: json['description'] ?? "",
-      price: double.parse(json['price'].toString()),
-      image: json['image'] ?? "",
-      categoryName: (json['category_name'] ?? json['category'] ?? "General")
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      price: double.tryParse(json['price']?.toString() ?? '') ?? 0,
+      image: json['image']?.toString() ?? '',
+      categoryName: (json['category_name'] ?? json['category'] ?? '')
           .toString(),
-      brand: (json['brand'] ?? "GlowLab").toString(),
-      rating: double.tryParse((json['rating'] ?? "4.5").toString()) ?? 4.5,
-      reviewCount: int.tryParse((json['review_count'] ?? "0").toString()) ?? 0,
-      stock: int.tryParse((json['stock'] ?? "0").toString()) ?? 0,
-      size: (json['size'] ?? "50ml").toString(),
+      // No fabricated brand/size/rating fallbacks. The backend now sends ""
+      // and 0 for missing values rather than substituting "GlowLab" / "50ml" /
+      // 4.5, which made unrated and unbranded products look real.
+      brand: (json['brand'] ?? '').toString(),
+      rating: double.tryParse(json['rating']?.toString() ?? '') ?? 0,
+      reviewCount: int.tryParse(json['review_count']?.toString() ?? '') ?? 0,
+      stock: int.tryParse(json['stock']?.toString() ?? '') ?? 0,
+      size: (json['size'] ?? '').toString(),
     );
   }
 }

@@ -1,0 +1,16 @@
+fastapi>=0.115.0
+uvicorn>=0.30.0
+sqlalchemy>=2.0.30
+
+# Schema migrations. create_all() cannot alter an existing table, so every
+# schema change from here needs a revision in migrations/versions/.
+alembic>=1.13.0
+
+# passlib is dropped: it is unmaintained, and the passlib 1.7.4 + bcrypt 4.1
+# pairing logs an AttributeError on every hash and verify. Passwords are
+# hashed with bcrypt directly in app/core/security.py.
+bcrypt>=4.1.0
+
+python-jose[cryptography]>=3.5.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0

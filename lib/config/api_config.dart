@@ -21,5 +21,8 @@ class ApiConfig {
 
   static const Duration timeout = Duration(seconds: 12);
 
-  static String endpoint(String module) => 'http://$host/cosmetic_api/$module';
+  // Use FastAPI base under /api; keep cosmetic_api prefix for compatibility if needed
+  static String get baseUrl => 'http://$host:8000/api';
+  static String get baseUrlLegacy => 'http://$host/cosmetic_api';
+  static String endpoint(String module) => '$baseUrl/$module';
 }
