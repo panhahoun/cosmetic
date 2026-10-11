@@ -184,7 +184,6 @@ class _ProfileViewState extends State<ProfileView> {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -194,50 +193,55 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ],
                 ),
-                child: Column(
-                  children: [
-                    _buildSettingsTile(
-                      icon: Icons.receipt_long_outlined,
-                      title: tr('order_history'),
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(tr('order_history_coming_soon')),
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(
-                      color: AppColors.textMuted.withAlpha(20),
-                      height: 1,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.location_on_outlined,
-                      title: tr('shipping_address'),
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(tr('shipping_address_coming_soon')),
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(
-                      color: AppColors.textMuted.withAlpha(20),
-                      height: 1,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.payment_outlined,
-                      title: tr('payment_methods'),
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(tr('payment_methods_coming_soon')),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                child: Material(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      _buildSettingsTile(
+                        icon: Icons.receipt_long_outlined,
+                        title: tr('order_history'),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(tr('order_history_coming_soon')),
+                            ),
+                          );
+                        },
+                      ),
+                      Divider(
+                        color: AppColors.textMuted.withAlpha(20),
+                        height: 1,
+                      ),
+                      _buildSettingsTile(
+                        icon: Icons.location_on_outlined,
+                        title: tr('shipping_address'),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(tr('shipping_address_coming_soon')),
+                            ),
+                          );
+                        },
+                      ),
+                      Divider(
+                        color: AppColors.textMuted.withAlpha(20),
+                        height: 1,
+                      ),
+                      _buildSettingsTile(
+                        icon: Icons.payment_outlined,
+                        title: tr('payment_methods'),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(tr('payment_methods_coming_soon')),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -261,7 +265,6 @@ class _ProfileViewState extends State<ProfileView> {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -271,75 +274,82 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ],
                 ),
-                child: Column(
-                  children: [
-                    _buildSettingsTile(
-                      icon: Icons.dark_mode_outlined,
-                      title: tr('dark_mode'),
-                      trailing: Switch(
-                        value: isDark,
-                        activeThumbColor: AppColors.primary,
-                        onChanged: (_) async {
-                          await _settings.toggleTheme();
-                          if (mounted) setState(() {});
-                        },
+                child: Material(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      _buildSettingsTile(
+                        icon: Icons.dark_mode_outlined,
+                        title: tr('dark_mode'),
+                        trailing: Switch(
+                          value: isDark,
+                          activeThumbColor: AppColors.primary,
+                          onChanged: (_) async {
+                            await _settings.toggleTheme();
+                            if (mounted) setState(() {});
+                          },
+                        ),
                       ),
-                    ),
-                    Divider(
-                      color: AppColors.textMuted.withAlpha(20),
-                      height: 1,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.language_outlined,
-                      title: tr('language'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('EN'),
-                            selected: !isKhmer,
-                            selectedColor: AppColors.primary.withAlpha(40),
-                            labelStyle: TextStyle(
-                              color: !isKhmer
-                                  ? AppColors.primary
-                                  : AppColors.textMuted,
-                              fontWeight: !isKhmer
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            onSelected: (_) async {
-                              await _settings.setLanguage(AppLanguage.english);
-                              if (mounted) setState(() {});
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('KH'),
-                            selected: isKhmer,
-                            selectedColor: AppColors.primary.withAlpha(40),
-                            labelStyle: TextStyle(
-                              color: isKhmer
-                                  ? AppColors.primary
-                                  : AppColors.textMuted,
-                              fontWeight: isKhmer
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            onSelected: (_) async {
-                              await _settings.setLanguage(AppLanguage.khmer);
-                              if (mounted) setState(() {});
-                            },
-                          ),
-                        ],
+                      Divider(
+                        color: AppColors.textMuted.withAlpha(20),
+                        height: 1,
                       ),
-                    ),
-                  ],
+                      _buildSettingsTile(
+                        icon: Icons.language_outlined,
+                        title: tr('language'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ChoiceChip(
+                              label: const Text('EN'),
+                              selected: !isKhmer,
+                              selectedColor: AppColors.primary.withAlpha(40),
+                              labelStyle: TextStyle(
+                                color: !isKhmer
+                                    ? AppColors.primary
+                                    : AppColors.textMuted,
+                                fontWeight: !isKhmer
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              onSelected: (_) async {
+                                await _settings.setLanguage(
+                                  AppLanguage.english,
+                                );
+                                if (mounted) setState(() {});
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            ChoiceChip(
+                              label: const Text('KH'),
+                              selected: isKhmer,
+                              selectedColor: AppColors.primary.withAlpha(40),
+                              labelStyle: TextStyle(
+                                color: isKhmer
+                                    ? AppColors.primary
+                                    : AppColors.textMuted,
+                                fontWeight: isKhmer
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              onSelected: (_) async {
+                                await _settings.setLanguage(AppLanguage.khmer);
+                                if (mounted) setState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -348,7 +358,6 @@ class _ProfileViewState extends State<ProfileView> {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -358,13 +367,18 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ],
                 ),
-                child: _buildSettingsTile(
-                  icon: Icons.logout_rounded,
-                  iconColor: Colors.redAccent,
-                  textColor: Colors.redAccent,
-                  title: tr('logout'),
-                  trailing: const SizedBox.shrink(),
-                  onTap: _logout,
+                child: Material(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  clipBehavior: Clip.antiAlias,
+                  child: _buildSettingsTile(
+                    icon: Icons.logout_rounded,
+                    iconColor: Colors.redAccent,
+                    textColor: Colors.redAccent,
+                    title: tr('logout'),
+                    trailing: const SizedBox.shrink(),
+                    onTap: _logout,
+                  ),
                 ),
               ),
               const SizedBox(height: 48), // Bottom padding

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../config/app_colors.dart';
 import '../config/app_settings.dart';
+import '../core/routes/app_routes.dart';
 import '../core/storage/session_store.dart';
 import '../models/product_model.dart';
 import '../data/cart_cache.dart';
@@ -20,8 +21,11 @@ class ProductCard extends StatelessWidget {
 
     final userId = await sessionStore.currentUserId() ?? 0;
     if (userId <= 0) {
-      Get.snackbar(tr('cart'), tr('please_login_add_to_cart'),
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        tr('cart'),
+        tr('please_login_add_to_cart'),
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
@@ -49,8 +53,11 @@ class ProductCard extends StatelessWidget {
     CartCache.markCartUpdated();
     await CartCache.refreshCartCountForCurrentUser();
     onAdded?.call();
-    Get.snackbar(tr('cart'), tr('added_to_cart'),
-        snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar(
+      tr('cart'),
+      tr('added_to_cart'),
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   @override
@@ -70,25 +77,33 @@ class ProductCard extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: () {},
+        onTap: () => Get.toNamed(AppRoutes.productDetail, arguments: product),
         borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.network(
-                    product.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: isDark
-                          ? AppColors.darkSurfaceAlt
-                          : AppColors.secondary,
-                      child: const Icon(Icons.image_outlined, color: AppColors.textMuted),
+              Expanded(
+                child: Hero(
+                  tag: 'product-${product.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Image.network(
+                        product.image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: isDark
+                              ? AppColors.darkSurfaceAlt
+                              : AppColors.secondary,
+                          child: const Icon(
+                            Icons.image_outlined,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -114,7 +129,7 @@ class ProductCard extends StatelessWidget {
                   fontSize: 12,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -194,10 +209,7 @@ class FeaturedProductCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
           ),
         ],
       ),

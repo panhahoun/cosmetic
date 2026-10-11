@@ -9,13 +9,30 @@ from app.serializers import serialize_product
 
 router = APIRouter()
 
+
+def _pexels(photo_id: int) -> str:
+    """Build a hotlinkable Pexels CDN URL for a free stock photo.
+
+    Pexels photos are free to use (Pexels License) and the images CDN allows
+    hotlinking, so the demo catalog does not ship real (and possibly
+    mis-licensed) brand product shots.
+    """
+    return (
+        f"https://images.pexels.com/photos/{photo_id}/"
+        f"pexels-photo-{photo_id}.jpeg?auto=compress&cs=tinysrgb&w=800"
+    )
+
+
+# Demo catalog. Seeding is idempotent and keyed on `name`, so editing an entry
+# here (a better image, a price change) propagates to an already-seeded
+# database -- local SQLite and the deployed Postgres alike -- on next startup.
 _SEED_PRODUCTS = [
     {
-        "id": 9001,
         "name": "Hydra Dew Gel Cleanser",
-        "description": "Gentle daily cleanser for all skin types.",
+        "description": "Gentle daily gel cleanser that removes makeup and "
+        "impurities without stripping the skin barrier.",
         "price": 18.0,
-        "image": "https://picsum.photos/seed/cleanser1/600/600",
+        "image": _pexels(6689393),
         "brand": "Lumiere",
         "size": "150ml",
         "stock": 24,
@@ -24,11 +41,11 @@ _SEED_PRODUCTS = [
         "category_name": "Cleanser",
     },
     {
-        "id": 9002,
         "name": "Peptide Bounce Serum",
-        "description": "Lightweight serum for elasticity and glow.",
+        "description": "Lightweight peptide serum for elasticity, firmness "
+        "and a healthy glow.",
         "price": 29.0,
-        "image": "https://picsum.photos/seed/serum1/600/600",
+        "image": _pexels(12602356),
         "brand": "NovaSkin",
         "size": "30ml",
         "stock": 18,
@@ -37,11 +54,11 @@ _SEED_PRODUCTS = [
         "category_name": "Serum",
     },
     {
-        "id": 9003,
         "name": "UV Shield SPF 50+",
-        "description": "Invisible sunscreen with broad-spectrum protection.",
+        "description": "Invisible broad-spectrum sunscreen that leaves no "
+        "white cast. Suitable for daily wear.",
         "price": 21.0,
-        "image": "https://picsum.photos/seed/sun1/600/600",
+        "image": _pexels(9496427),
         "brand": "RayDef",
         "size": "50ml",
         "stock": 37,
@@ -50,11 +67,11 @@ _SEED_PRODUCTS = [
         "category_name": "Sunscreen",
     },
     {
-        "id": 9004,
         "name": "Ceramide Cloud Cream",
-        "description": "Moisturizer for dry and sensitive skin.",
+        "description": "Rich ceramide moisturizer that repairs and comforts "
+        "dry, sensitive skin.",
         "price": 26.0,
-        "image": "https://picsum.photos/seed/moist1/600/600",
+        "image": _pexels(6690857),
         "brand": "DermaNest",
         "size": "50ml",
         "stock": 13,
@@ -62,47 +79,228 @@ _SEED_PRODUCTS = [
         "review_count": 390,
         "category_name": "Moisturizer",
     },
+    {
+        "name": "Vitamin C Glow Serum",
+        "description": "Brightening vitamin C serum that fades dullness and "
+        "evens skin tone.",
+        "price": 24.0,
+        "image": _pexels(4841282),
+        "brand": "NovaSkin",
+        "size": "30ml",
+        "stock": 30,
+        "rating": 4.7,
+        "review_count": 288,
+        "category_name": "Serum",
+    },
+    {
+        "name": "Retinol Renewal Night Serum",
+        "description": "Overnight retinol serum that smooths fine lines and "
+        "refines skin texture.",
+        "price": 34.0,
+        "image": _pexels(34823988),
+        "brand": "DermaNest",
+        "size": "30ml",
+        "stock": 15,
+        "rating": 4.9,
+        "review_count": 476,
+        "category_name": "Serum",
+    },
+    {
+        "name": "Hyaluronic Hydra Essence",
+        "description": "Layered hydration essence with hyaluronic acid for "
+        "plump, dewy skin.",
+        "price": 27.0,
+        "image": _pexels(29675494),
+        "brand": "Lumiere",
+        "size": "100ml",
+        "stock": 22,
+        "rating": 4.6,
+        "review_count": 201,
+        "category_name": "Essence",
+    },
+    {
+        "name": "Rose Petal Facial Toner",
+        "description": "Alcohol-free rose toner that refreshes and rebalances "
+        "skin after cleansing.",
+        "price": 16.0,
+        "image": _pexels(14149693),
+        "brand": "Lumiere",
+        "size": "200ml",
+        "stock": 40,
+        "rating": 4.5,
+        "review_count": 165,
+        "category_name": "Toner",
+    },
+    {
+        "name": "Daily Glow Moisturizer",
+        "description": "Featherlight daily moisturizer that keeps makeup "
+        "fresh all day.",
+        "price": 22.0,
+        "image": _pexels(6690236),
+        "brand": "GlowLab",
+        "size": "50ml",
+        "stock": 28,
+        "rating": 4.7,
+        "review_count": 254,
+        "category_name": "Moisturizer",
+    },
+    {
+        "name": "Overnight Repair Cream",
+        "description": "Restorative night cream that works with your skin's "
+        "natural repair cycle.",
+        "price": 31.0,
+        "image": _pexels(19173472),
+        "brand": "DermaNest",
+        "size": "50ml",
+        "stock": 12,
+        "rating": 4.8,
+        "review_count": 319,
+        "category_name": "Moisturizer",
+    },
+    {
+        "name": "Soothing Aloe Gel Cream",
+        "description": "Cooling aloe gel cream that calms redness and "
+        "irritation after sun exposure.",
+        "price": 18.0,
+        "image": _pexels(24602074),
+        "brand": "GlowLab",
+        "size": "60ml",
+        "stock": 35,
+        "rating": 4.6,
+        "review_count": 176,
+        "category_name": "Moisturizer",
+    },
+    {
+        "name": "Shea Silk Body Lotion",
+        "description": "Fast-absorbing shea body lotion for soft, nourished "
+        "skin from neck to toe.",
+        "price": 19.0,
+        "image": _pexels(18996279),
+        "brand": "Lumiere",
+        "size": "250ml",
+        "stock": 33,
+        "rating": 4.7,
+        "review_count": 188,
+        "category_name": "Body Care",
+    },
+    {
+        "name": "Botanic Repair Shampoo",
+        "description": "Sulfate-free shampoo that strengthens and adds shine "
+        "to dry, damaged hair.",
+        "price": 20.0,
+        "image": _pexels(16973307),
+        "brand": "NovaSkin",
+        "size": "300ml",
+        "stock": 26,
+        "rating": 4.6,
+        "review_count": 97,
+        "category_name": "Hair Care",
+    },
+    {
+        "name": "Blossom Eau de Parfum",
+        "description": "Soft floral eau de parfum with notes of rose, peony "
+        "and white musk.",
+        "price": 45.0,
+        "image": _pexels(12563417),
+        "brand": "Lumiere",
+        "size": "50ml",
+        "stock": 9,
+        "rating": 4.8,
+        "review_count": 212,
+        "category_name": "Fragrance",
+    },
+    {
+        "name": "Mineral Matte Sunscreen SPF 30",
+        "description": "Mineral sunscreen with a soft matte finish that "
+        "controls shine.",
+        "price": 23.0,
+        "image": _pexels(16615433),
+        "brand": "RayDef",
+        "size": "50ml",
+        "stock": 20,
+        "rating": 4.5,
+        "review_count": 133,
+        "category_name": "Sunscreen",
+    },
+    {
+        "name": "Daily UV Fluid SPF 50",
+        "description": "Ultra-light UV fluid that layers invisibly under "
+        "moisturizer and makeup.",
+        "price": 25.0,
+        "image": _pexels(27401466),
+        "brand": "RayDef",
+        "size": "50ml",
+        "stock": 17,
+        "rating": 4.7,
+        "review_count": 244,
+        "category_name": "Sunscreen",
+    },
 ]
 
 
-def seed_if_empty(db: Session) -> None:
-    """Insert demo catalog data once.
+def seed_catalog(db: Session) -> None:
+    """Insert the demo catalog and keep it in sync on every startup.
 
-    Called from the app lifespan, not from a GET handler: running this inside
-    get_products() meant two concurrent first requests both saw count == 0 and
-    both inserted, and it wrote to the database on a read path.
+    This runs on each start rather than only when the table is empty, so new
+    seed products and corrected images reach an already-populated database --
+    local SQLite and the deployed Postgres alike -- on the next deploy/restart.
+    Matching is by product name, so an entry edited here updates the existing
+    row instead of duplicating it.
+
+    Only presentational fields are refreshed. `stock` and `reserved` are left
+    untouched so a restart never resurrects inventory that orders consumed.
     """
-    if db.query(Product).count() > 0:
-        return
+    changed = False
 
-    cat_map: dict[str, Category] = {}
-    for seed in _SEED_PRODUCTS:
-        cat_name = seed.get("category_name", "General")
-        if cat_name not in cat_map:
-            cat = db.query(Category).filter(Category.name == cat_name).first()
-            if not cat:
-                cat = Category(name=cat_name)
-                db.add(cat)
-                db.flush()
-            cat_map[cat_name] = cat
+    def category_for(name: str) -> Category:
+        nonlocal changed
+        cat = db.query(Category).filter(Category.name == name).first()
+        if cat is None:
+            cat = Category(name=name)
+            db.add(cat)
+            db.flush()
+            changed = True
+        return cat
 
     for seed in _SEED_PRODUCTS:
-        cat = cat_map.get(seed.get("category_name", "General"))
-        db.add(
-            Product(
-                name=seed["name"],
-                description=seed["description"],
-                price=seed["price"],
-                image=seed["image"],
-                brand=seed["brand"],
-                size=seed["size"],
-                stock=seed["stock"],
-                rating=seed["rating"],
-                review_count=seed["review_count"],
-                category_id=cat.id if cat else None,
+        cat = category_for(seed.get("category_name", "General"))
+        product = db.query(Product).filter(Product.name == seed["name"]).first()
+
+        if product is None:
+            db.add(
+                Product(
+                    name=seed["name"],
+                    description=seed["description"],
+                    price=seed["price"],
+                    image=seed["image"],
+                    brand=seed["brand"],
+                    size=seed["size"],
+                    stock=seed["stock"],
+                    rating=seed["rating"],
+                    review_count=seed["review_count"],
+                    category_id=cat.id,
+                )
             )
-        )
-    db.commit()
+            changed = True
+            continue
+
+        desired = {
+            "description": seed["description"],
+            "price": seed["price"],
+            "image": seed["image"],
+            "brand": seed["brand"],
+            "size": seed["size"],
+            "rating": seed["rating"],
+            "review_count": seed["review_count"],
+            "category_id": cat.id,
+        }
+        for field, value in desired.items():
+            if getattr(product, field) != value:
+                setattr(product, field, value)
+                changed = True
+
+    if changed:
+        db.commit()
 
 
 @router.get("/get_products")

@@ -144,6 +144,8 @@ class AppSettings extends ChangeNotifier {
       'payment_methods_coming_soon': 'Payment Methods coming soon',
       'guest_user': 'Guest User',
       'guest_email': 'guest@example.com',
+      'in_stock': 'In stock',
+      'out_of_stock': 'Out of stock',
     };
 
     final km = <String, String>{
@@ -217,8 +219,7 @@ class AppSettings extends ChangeNotifier {
       'please_login_wishlist': 'សូមចូលគណនីដើម្បីប្រើចំណូលចិត្ត',
       'please_login_again': 'សូមចូលគណនីម្តងទៀត',
       'please_login_add_to_cart': 'សូមចូលគណនីដើម្បីបន្ថែមទៅកន្រ្តក',
-      'remove_server_not_supported':
-          'មិនទាន់គាំទ្រការលុបពីកន្រ្តកនៅម៉ាស៊ីនមេ',
+      'remove_server_not_supported': 'មិនទាន់គាំទ្រការលុបពីកន្រ្តកនៅម៉ាស៊ីនមេ',
       'cart_update_failed': 'មិនអាចកែប្រែកន្រ្តកបានទេ',
       'checkout_failed': 'បង់ប្រាក់បរាជ័យ',
       'checkout_failed_try_again': 'បង់ប្រាក់បរាជ័យ។ សូមព្យាយាមម្តងទៀត។',
@@ -239,6 +240,8 @@ class AppSettings extends ChangeNotifier {
       'payment_methods_coming_soon': 'វិធីបង់ប្រាក់នឹងមានឆាប់ៗ',
       'guest_user': 'ភ្ញៀវ',
       'guest_email': 'guest@example.com',
+      'in_stock': 'មានស្តុក',
+      'out_of_stock': 'អស់ស្តុក',
     };
 
     final dictionary = isKhmer ? km : en;

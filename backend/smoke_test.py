@@ -513,10 +513,10 @@ with TestClient(app) as client:
     # Payments: reservation, state machine, webhook safety
     # =====================================================================
 
-    # Earlier sections deliberately drain stock and oversell, and the seed only
-    # has four products, so the payment scenarios get their own dedicated
-    # fixtures. Inserted now, after the seed-dependent checks above have run,
-    # so they cannot perturb them.
+    # Earlier sections deliberately drain stock and oversell, so the payment
+    # scenarios get their own dedicated fixtures rather than depending on the
+    # seeded catalog. Inserted now, after the seed-dependent checks above have
+    # run, so they cannot perturb them.
     payment_product_ids: list[int] = []
     db = SessionLocal()
     try:

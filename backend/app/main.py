@@ -11,11 +11,12 @@ from app.routers import auth, products, categories, cart, orders, addresses, pay
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
-    # Seeding runs once at startup instead of on every GET /get_products, which
-    # raced on concurrent first requests and wrote to the DB from a read path.
+    # Seeding runs on every startup so catalog edits (new products, corrected
+    # images) also reach an already-populated deployed database. It is
+    # idempotent and keyed on product name, so it never duplicates rows.
     db = SessionLocal()
     try:
-        products.seed_if_empty(db)
+        products.seed_catalog(db)
         # Release anything a previous run left reserved. Without this an orders
         # table restored from a backup keeps its reserved stock locked forever.
         from app.services.orders import expire_stale_orders
