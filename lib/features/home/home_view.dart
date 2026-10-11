@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_settings.dart';
+import '../../core/routes/app_routes.dart';
 import '../../data/cart_cache.dart';
 import '../../widgets/product_card.dart';
 
@@ -146,59 +147,63 @@ class HomeView extends GetView<HomeController> {
                 child: FeaturedProductCard(
                   title: tr('featured_card_title'),
                   subtitle: tr('featured_card_subtitle'),
-                  onTap: () {},
+                  onTap: () {
+                    final list = controller.products;
+                    if (list.isEmpty) return;
+                    final top = list.reduce(
+                      (a, b) => b.rating >= a.rating ? b : a,
+                    );
+                    Get.toNamed(AppRoutes.productDetail, arguments: top);
+                  },
                 ),
               ),
               const SizedBox(height: 8),
               Expanded(
-                child: Obx(
-                  () {
-                    if (controller.isLoading.value) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.primary),
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
                         ),
-                      );
-                    }
-                    final list = controller.filteredProducts;
-                    if (list.isEmpty) {
-                      return Center(
-                        child: Text(
-                          tr('no_products'),
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      );
-                    }
-                    return RefreshIndicator(
-                      onRefresh: controller.loadProducts,
-                      color: AppColors.primary,
-                      child: GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.72,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: list.length,
-                        itemBuilder: (context, index) {
-                          final product = list[index];
-                          return ProductCard(
-                            product: product,
-                            onAdded: () {
-                              CartCache.markCartUpdated();
-                              CartCache.refreshCartCountForCurrentUser();
-                            },
-                          );
-                        },
                       ),
                     );
-                  },
-                ),
+                  }
+                  final list = controller.filteredProducts;
+                  if (list.isEmpty) {
+                    return Center(
+                      child: Text(
+                        tr('no_products'),
+                        style: const TextStyle(color: AppColors.textMuted),
+                      ),
+                    );
+                  }
+                  return RefreshIndicator(
+                    onRefresh: controller.loadProducts,
+                    color: AppColors.primary,
+                    child: GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.72,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final product = list[index];
+                        return ProductCard(
+                          product: product,
+                          onAdded: () {
+                            CartCache.markCartUpdated();
+                            CartCache.refreshCartCountForCurrentUser();
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
               ),
             ],
           ),

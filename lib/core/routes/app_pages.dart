@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../../features/addresses/address_binding.dart';
+import '../../features/addresses/addresses_view.dart';
 import '../../features/auth/auth_binding.dart';
 import '../../features/auth/login_view.dart';
 import '../../features/auth/register_view.dart';
@@ -9,6 +11,9 @@ import '../../features/home/home_binding.dart';
 import '../../features/home/home_view.dart';
 import '../../features/main/main_binding.dart';
 import '../../features/main/main_view.dart';
+import '../../features/orders/orders_binding.dart';
+import '../../features/orders/orders_view.dart';
+import '../../features/payment/payment_methods_view.dart';
 import '../../features/profile/profile_binding.dart';
 import '../../features/profile/profile_view.dart';
 import '../../features/product/product_detail_view.dart';
@@ -71,6 +76,20 @@ class AppPages {
     GetPage(
       name: AppRoutes.productDetail,
       page: () => const ProductDetailView(),
+    ),
+    GetPage(
+      name: AppRoutes.orders,
+      page: () => const OrdersView(),
+      binding: OrdersBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.addresses,
+      page: () => const AddressesView(),
+      binding: AddressBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.paymentMethods,
+      page: () => const PaymentMethodsView(),
     ),
   ];
 }

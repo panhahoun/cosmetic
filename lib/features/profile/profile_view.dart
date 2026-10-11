@@ -202,13 +202,7 @@ class _ProfileViewState extends State<ProfileView> {
                       _buildSettingsTile(
                         icon: Icons.receipt_long_outlined,
                         title: tr('order_history'),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(tr('order_history_coming_soon')),
-                            ),
-                          );
-                        },
+                        onTap: () => Get.toNamed(AppRoutes.orders),
                       ),
                       Divider(
                         color: AppColors.textMuted.withAlpha(20),
@@ -217,13 +211,7 @@ class _ProfileViewState extends State<ProfileView> {
                       _buildSettingsTile(
                         icon: Icons.location_on_outlined,
                         title: tr('shipping_address'),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(tr('shipping_address_coming_soon')),
-                            ),
-                          );
-                        },
+                        onTap: () => Get.toNamed(AppRoutes.addresses),
                       ),
                       Divider(
                         color: AppColors.textMuted.withAlpha(20),
@@ -232,13 +220,7 @@ class _ProfileViewState extends State<ProfileView> {
                       _buildSettingsTile(
                         icon: Icons.payment_outlined,
                         title: tr('payment_methods'),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(tr('payment_methods_coming_soon')),
-                            ),
-                          );
-                        },
+                        onTap: () => Get.toNamed(AppRoutes.paymentMethods),
                       ),
                     ],
                   ),

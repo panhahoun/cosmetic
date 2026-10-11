@@ -54,7 +54,9 @@ class CartController extends GetxController {
       final resolved = await CartCache.resolve(userId.value);
       final raw = resolved['data'];
       cartItems.assignAll(
-        raw is List ? raw.cast<Map<String, dynamic>>() : <Map<String, dynamic>>[],
+        raw is List
+            ? raw.cast<Map<String, dynamic>>()
+            : <Map<String, dynamic>>[],
       );
       total.value = _asDouble(resolved['total']);
     } finally {
@@ -72,14 +74,23 @@ class CartController extends GetxController {
     } on CartException catch (e) {
       if (e.isUnauthorized) {
         sessionExpired.value = true;
-        Get.snackbar(tr('cart'), tr('please_login_again'),
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          tr('cart'),
+          tr('please_login_again'),
+          snackPosition: SnackPosition.BOTTOM,
+        );
       } else if (e.isConflict) {
-        Get.snackbar(tr('cart'), e.message,
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          tr('cart'),
+          e.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
       } else {
-        Get.snackbar(tr('cart_update_failed'), e.message,
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          tr('cart_update_failed'),
+          e.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
       return false;
     }
@@ -120,8 +131,11 @@ class CartController extends GetxController {
   }) async {
     final ok = await _guard(() async {
       if (userId.value <= 0) {
-        Get.snackbar(tr('cart'), tr('please_login_add_to_cart'),
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          tr('cart'),
+          tr('please_login_add_to_cart'),
+          snackPosition: SnackPosition.BOTTOM,
+        );
         return;
       }
       await _cartServiceDio.addToCart(productId, quantity);
@@ -139,22 +153,32 @@ class CartController extends GetxController {
     await loadCart();
     unawaitedRefreshCount();
     if (sessionExpired.value == false && userId.value > 0) {
-      Get.snackbar(tr('cart'), tr('added_to_cart'),
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        tr('cart'),
+        tr('added_to_cart'),
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
-  Future<void> checkout({String? shippingAddress}) async {
+  Future<void> checkout({
+    String paymentMethod = 'cash_on_delivery',
+    String? shippingAddress,
+  }) async {
     isLoading.value = true;
     try {
       if (userId.value <= 0) {
         await CartCache.clearLocalCart(userId.value);
         cartItems.clear();
         total.value = 0;
-        Get.snackbar(tr('checkout'), tr('order_placed_local'),
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          tr('checkout'),
+          tr('order_placed_local'),
+          snackPosition: SnackPosition.BOTTOM,
+        );
       } else {
         final res = await _cartServiceDio.checkout(
+          paymentMethod: paymentMethod,
           shippingAddress: shippingAddress,
         );
         if (res['status'] == true) {
