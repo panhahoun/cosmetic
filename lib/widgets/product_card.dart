@@ -8,6 +8,7 @@ import '../core/storage/session_store.dart';
 import '../models/product_model.dart';
 import '../data/cart_cache.dart';
 import '../data/cart_service_dio.dart';
+import '../features/wishlist/wishlist_controller.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -63,6 +64,9 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final WishlistController? wishlist = Get.isRegistered<WishlistController>()
+        ? Get.find<WishlistController>()
+        : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -85,27 +89,45 @@ class ProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Hero(
-                  tag: 'product-${product.id}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Image.network(
-                        product.image,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: isDark
-                              ? AppColors.darkSurfaceAlt
-                              : AppColors.secondary,
-                          child: const Icon(
-                            Icons.image_outlined,
-                            color: AppColors.textMuted,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'product-${product.id}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Image.network(
+                            product.image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              color: isDark
+                                  ? AppColors.darkSurfaceAlt
+                                  : AppColors.secondary,
+                              child: const Icon(
+                                Icons.image_outlined,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: wishlist == null
+                          ? const _FavoriteButton(active: false)
+                          : Obx(
+                              () => _FavoriteButton(
+                                active: wishlist.isFavorite(product.id),
+                                onTap: () => wishlist.toggle(product),
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),
@@ -159,6 +181,39 @@ class ProductCard extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  final bool active;
+  final VoidCallback? onTap;
+
+  const _FavoriteButton({required this.active, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: isDark ? AppColors.darkSurfaceAlt : Colors.white.withAlpha(235),
+      shape: const CircleBorder(),
+      elevation: 3,
+      shadowColor: Colors.black.withAlpha(60),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Icon(
+            active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            size: 19,
+            color: active
+                ? AppColors.error
+                : (isDark ? AppColors.darkTextMuted : AppColors.textMuted),
           ),
         ),
       ),

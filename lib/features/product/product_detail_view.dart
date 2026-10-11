@@ -7,6 +7,7 @@ import '../../core/storage/session_store.dart';
 import '../../data/cart_cache.dart';
 import '../../data/cart_service_dio.dart';
 import '../../models/product_model.dart';
+import '../wishlist/wishlist_controller.dart';
 
 class ProductDetailView extends StatefulWidget {
   final Product? product;
@@ -73,6 +74,24 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     );
   }
 
+  Widget _favoriteAction(Product product) {
+    final wishlist = Get.isRegistered<WishlistController>()
+        ? Get.find<WishlistController>()
+        : null;
+    if (wishlist == null) return const SizedBox.shrink();
+    return Obx(() {
+      final fav = wishlist.isFavorite(product.id);
+      return IconButton(
+        onPressed: () => wishlist.toggle(product),
+        tooltip: fav ? tr('removed_from_wishlist') : tr('added_to_wishlist'),
+        icon: Icon(
+          fav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          color: fav ? AppColors.error : null,
+        ),
+      );
+    });
+  }
+
   Widget _infoChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -112,7 +131,10 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     final outOfStock = product.stock <= 0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(tr('product_detail'))),
+      appBar: AppBar(
+        title: Text(tr('product_detail')),
+        actions: [_favoriteAction(product)],
+      ),
       body: Column(
         children: [
           Expanded(

@@ -14,6 +14,7 @@ import '../../features/profile/profile_view.dart';
 import '../../features/product/product_detail_view.dart';
 import '../../features/splash/splash_binding.dart';
 import '../../features/splash/splash_view.dart';
+import '../../features/wishlist/wishlist_binding.dart';
 import '../../features/wishlist/wishlist_view.dart';
 import 'app_routes.dart';
 
@@ -40,7 +41,12 @@ class AppPages {
       name: AppRoutes.main,
       page: () => const MainView(),
       binding: MainBinding(),
-      bindings: [HomeBinding(), CartBinding(), ProfileBinding()],
+      bindings: [
+        HomeBinding(),
+        CartBinding(),
+        ProfileBinding(),
+        WishlistBinding(),
+      ],
     ),
     GetPage(
       name: AppRoutes.home,

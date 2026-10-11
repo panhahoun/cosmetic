@@ -255,6 +255,68 @@ with TestClient(app) as client:
         "access-control-allow-origin" not in {k.lower() for k in r.headers},
     )
 
+    # --- Wishlist: auth is required, entries are per-user, toggles are safe --
+    r = client.get("/api/wishlist/get_wishlist")
+    check(
+        "wishlist read requires a token",
+        r.status_code == 401,
+        f"got {r.status_code}",
+    )
+    r = client.post("/api/wishlist/add", json={"product_id": pid})
+    check(
+        "adding to wishlist requires a token",
+        r.status_code == 401,
+        f"got {r.status_code}",
+    )
+    r = client.post(
+        "/api/wishlist/add", json={"product_id": pid}, headers=auth(bob_token)
+    )
+    check("add to wishlist returns 200", r.status_code == 200, r.text[:120])
+    r2 = client.post(
+        "/api/wishlist/add", json={"product_id": pid}, headers=auth(bob_token)
+    )
+    check(
+        "duplicate wishlist add is idempotent",
+        r2.status_code == 200 and len(r2.json()["data"]) == 1,
+        r2.text[:120],
+    )
+    wish_body = client.get(
+        "/api/wishlist/get_wishlist", headers=auth(bob_token)
+    ).json()
+    check(
+        "wishlist lists the added product",
+        len(wish_body["data"]) == 1 and wish_body["data"][0]["id"] == pid,
+        f"got {wish_body['data']}",
+    )
+    alice_wl = client.get(
+        "/api/wishlist/get_wishlist", headers=auth(alice_token)
+    ).json()
+    check(
+        "a different user's wishlist stays empty",
+        len(alice_wl["data"]) == 0,
+        f"got {alice_wl['data']}",
+    )
+    r = client.post(
+        "/api/wishlist/remove", json={"product_id": pid}, headers=auth(bob_token)
+    )
+    check("remove from wishlist returns 200", r.status_code == 200, r.text[:120])
+    wish_body = client.get(
+        "/api/wishlist/get_wishlist", headers=auth(bob_token)
+    ).json()
+    check(
+        "wishlist is empty after removal",
+        len(wish_body["data"]) == 0,
+        f"got {wish_body['data']}",
+    )
+    r = client.post(
+        "/api/wishlist/remove", json={"product_id": pid}, headers=auth(bob_token)
+    )
+    check(
+        "removing a product not on the wishlist is a no-op 200",
+        r.status_code == 200,
+        f"got {r.status_code}",
+    )
+
     # --- #6 oversell is rejected, not clamped -----------------------------
     client.post(
         "/api/cart/add_to_cart",

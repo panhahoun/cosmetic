@@ -20,21 +20,22 @@ class CartController extends GetxController {
   AppSettings get settings => AppSettings.instance;
   String tr(String key) => settings.t(key);
 
-  static bool _firstInit = true;
-
   @override
   void onInit() {
     super.onInit();
     // CartCache needs to read the server cart for the badge count without
     // depending on Dio itself.
     CartCacheRemoteBridge.itemsLoader = (id) => CartServiceDio().getCart();
-    if (_firstInit) {
-      _firstInit = false;
-      loadUserId();
-    }
+    reload();
   }
 
-  Future<void> loadUserId() async {
+  /// Re-resolves the current user and reloads the cart.
+  ///
+  /// Called on every init and whenever the Cart tab is selected (see
+  /// MainController.changeIndex), so items added from home or the product
+  /// detail screen are reflected without requiring the controller to be
+  /// recreated -- the tab stays alive in MainView's IndexedStack.
+  Future<void> reload() async {
     userId.value = await sessionStore.currentUserId() ?? 0;
     await loadCart();
   }
@@ -45,7 +46,10 @@ class CartController extends GetxController {
   }
 
   Future<void> loadCart() async {
-    isLoading.value = true;
+    // Keep whatever is already on screen while a silent re-fetch runs; only
+    // show the spinner when there is nothing loaded yet. Without this the cart
+    // flickers to a spinner every time the tab is re-selected.
+    if (cartItems.isEmpty) isLoading.value = true;
     try {
       final resolved = await CartCache.resolve(userId.value);
       final raw = resolved['data'];
