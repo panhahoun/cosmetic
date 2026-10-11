@@ -139,9 +139,23 @@ class Settings(BaseSettings):
 
     @field_validator("database_url")
     @classmethod
-    def normalize_sqlite(cls, v: str) -> str:
+    def normalize_database_url(cls, v: str) -> str:
+        # Bare "sqlite://" without the third slash resolves to a relative path;
+        # accept it rather than failing on a common typo.
         if v.startswith("sqlite://") and not v.startswith("sqlite:///"):
-            return v.replace("sqlite://", "sqlite:///", 1)
+            v = v.replace("sqlite://", "sqlite:///", 1)
+
+        # Force the psycopg (v3) driver for Postgres. SQLAlchemy 2.1 switched
+        # the default driver for a bare "postgresql://" URL from psycopg2 to
+        # psycopg (v3), and hosted Postgres (Neon, Render, ...) hands out a bare
+        # URL. Pinning the driver here keeps the app and Alembic (both read this
+        # setting) on the same driver, which is the psycopg[binary] dependency
+        # in requirements.txt. Without this the deployed image would import
+        # psycopg2 and crash with "No module named 'psycopg2'".
+        if v.startswith("postgres://"):
+            v = "postgresql+psycopg://" + v[len("postgres://"):]
+        elif v.startswith("postgresql://"):
+            v = "postgresql+psycopg://" + v[len("postgresql://"):]
         return v
 
     @field_validator("cors_origins")

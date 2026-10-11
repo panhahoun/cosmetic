@@ -16,6 +16,10 @@ engine = create_engine(
     connect_args=connect_args,
     echo=False,
     future=True,
+    # Neon and other free hosts drop idle connections. Without a liveness
+    # check, the first request after an idle period reuses a dead connection
+    # and 500s.
+    pool_pre_ping=True,
 )
 
 if settings.database_url.startswith("sqlite"):

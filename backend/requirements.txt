@@ -2,6 +2,11 @@ fastapi>=0.115.0
 uvicorn>=0.30.0
 sqlalchemy>=2.0.30
 
+# PostgreSQL driver (psycopg v3). Required by the deployed Postgres (Neon).
+# app/core/config.py normalises a bare postgresql:// URL to postgresql+psycopg,
+# so this is the driver the image must ship.
+psycopg[binary]>=3.2
+
 # Schema migrations. create_all() cannot alter an existing table, so every
 # schema change from here needs a revision in migrations/versions/.
 alembic>=1.13.0
@@ -12,5 +17,8 @@ alembic>=1.13.0
 bcrypt>=4.1.0
 
 python-jose[cryptography]>=3.5.0
-pydantic>=2.9.0
+# [email] pulls email-validator, which pydantic needs at import time for the
+# EmailStr fields in app/routers/auth.py. Without it the app crashes on startup
+# with "ImportError: email-validator is not defined".
+pydantic[email]>=2.9.0
 pydantic-settings>=2.6.0
