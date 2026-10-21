@@ -13,8 +13,7 @@ class CartController extends GetxController {
   final isLoading = false.obs;
   final userId = 0.obs;
 
-  /// Set when the last call failed because the session is gone, so the view can
-  /// prompt for a re-login instead of showing a generic error.
+  /// Set when the session expired, so the view can ask for a re-login.
   final sessionExpired = false.obs;
 
   AppSettings get settings => AppSettings.instance;
@@ -29,12 +28,8 @@ class CartController extends GetxController {
     reload();
   }
 
-  /// Re-resolves the current user and reloads the cart.
-  ///
-  /// Called on every init and whenever the Cart tab is selected (see
-  /// MainController.changeIndex), so items added from home or the product
-  /// detail screen are reflected without requiring the controller to be
-  /// recreated -- the tab stays alive in MainView's IndexedStack.
+  /// Reloads the cart for the current user. Called on init and whenever the
+  /// Cart tab is selected, since the tab stays alive in the IndexedStack.
   Future<void> reload() async {
     userId.value = await sessionStore.currentUserId() ?? 0;
     await loadCart();
@@ -63,8 +58,7 @@ class CartController extends GetxController {
     }
   }
 
-  /// Wraps a server call so business-rule failures (409) and expired sessions
-  /// (401) reach the user as a specific message.
+  /// Turns 409 (business rule) and 401 (session) into specific messages.
   Future<bool> _guard(Future<void> Function() action) async {
     try {
       await action();

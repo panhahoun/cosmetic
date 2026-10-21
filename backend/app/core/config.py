@@ -58,7 +58,6 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080"
 
-    # --- payments -------------------------------------------------------
     # Currency is explicit rather than implied. KHQR settles in KHR and Baray
     # settles in USD, and mixing the two is how a paid order ends up matching
     # the wrong total. Every Payment row records this value.

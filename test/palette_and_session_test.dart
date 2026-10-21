@@ -46,8 +46,7 @@ void main() {
     });
 
     test('readToken is null and cachedToken is null before priming', () async {
-      // No platform channels are mocked here, so the secure-storage read
-      // throws and must be swallowed rather than propagate.
+      // No platform channels are mocked, so the secure-storage read throws.
       expect(await sessionStore.readToken(), isNull);
       expect(sessionStore.cachedToken, isNull);
     });

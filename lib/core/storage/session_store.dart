@@ -37,8 +37,7 @@ class SessionStore {
     return _cachedToken;
   }
 
-  /// Synchronous accessor for the Dio interceptor, which cannot await.
-  /// Returns null until [prime] has completed.
+  /// Sync accessor for the Dio interceptor; null until [prime] completes.
   String? get cachedToken => _tokenLoaded ? _cachedToken : null;
 
   Future<void> prime() async {

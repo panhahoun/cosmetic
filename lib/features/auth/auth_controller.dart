@@ -18,8 +18,7 @@ class AuthController extends GetxController {
 
   final isLoading = false.obs;
 
-  /// Server-supplied reason the last attempt failed, so the view can show
-  /// "Email already registered" instead of a generic string.
+  /// Server-supplied failure reason, shown instead of a generic string.
   final errorMessage = RxnString();
 
   AppSettings get settings => AppSettings.instance;

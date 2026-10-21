@@ -177,8 +177,7 @@ class CartCache {
   }
 }
 
-/// Indirection so [CartCache] stays free of any Dio dependency while still
-/// being able to read server-side quantities for the badge.
+/// Reads server-side quantities for the badge without depending on Dio.
 abstract class CartCacheRemoteBridge {
   static Future<Map<String, dynamic>> Function(int userId)? itemsLoader;
 

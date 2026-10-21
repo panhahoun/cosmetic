@@ -11,8 +11,7 @@ import 'core/storage/session_store.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppSettings.instance.init();
-  // Load the stored token before the first frame so the Dio interceptor can
-  // attach it synchronously to the initial requests.
+  // Load the token before the first frame: the Dio interceptor reads it sync.
   await sessionStore.prime();
   runApp(const MyApp());
 }

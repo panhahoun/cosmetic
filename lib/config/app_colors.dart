@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  // --- Core palette -------------------------------------------------------
 
   /// Rose / dusty pink. Buttons, selected states, prices, favorite icons.
   static const Color primary = Color(0xFFC98F9B);
@@ -39,7 +38,6 @@ class AppColors {
   /// Soft red. Errors and discount badges.
   static const Color error = Color(0xFFC65D63);
 
-  // --- Composite roles ----------------------------------------------------
 
   /// Bottom navigation selected.
   static const Color navSelected = primary;
@@ -68,7 +66,6 @@ class AppColors {
   /// Product card / splash gradient, light (bottom).
   static const Color cardGradientBottom = Color(0xFFF9F1F0);
 
-  // --- Dark mode ----------------------------------------------------------
 
   /// Darker rose that keeps AA contrast against dark surfaces.
   static const Color primaryDark = Color(0xFFD8A6B0);
@@ -89,7 +86,6 @@ class AppColors {
 
   static const Color darkGradientBottom = Color(0xFF241F29);
 
-  // --- Helpers -------------------------------------------------------------
 
   /// Transparent rose for glows, shadows and selection indicators.
   static Color primaryAlpha(double opacity) =>
