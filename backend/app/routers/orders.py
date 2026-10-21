@@ -110,9 +110,7 @@ def get_order(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    # Ownership is part of the query, not an optional filter: a caller-supplied
-    # user_id that defaults to None used to skip the check entirely and let
-    # anyone read any order by guessing a sequential id.
+    # Ownership is part of the query: a caller-supplied user_id must not widen it.
     order = (
         db.query(Order)
         .options(joinedload(Order.items))

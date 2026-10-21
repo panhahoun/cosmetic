@@ -88,8 +88,7 @@ void main() {
     });
 
     test('a genuine rating of zero is not replaced with a default', () {
-      // The backend serializer used `rating or 4.5`, which turned a real 0
-      // into 4.5. This guards the client against a regression on either side.
+      // Guard: a real 0 rating must not become 4.5.
       final product = Product.fromJson({
         'id': 1,
         'name': 'Unrated',

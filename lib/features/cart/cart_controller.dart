@@ -46,9 +46,8 @@ class CartController extends GetxController {
   }
 
   Future<void> loadCart() async {
-    // Keep whatever is already on screen while a silent re-fetch runs; only
-    // show the spinner when there is nothing loaded yet. Without this the cart
-    // flickers to a spinner every time the tab is re-selected.
+    // Only spin when there is nothing to show, so re-selecting the tab
+    // doesn't flash a spinner over the current list.
     if (cartItems.isEmpty) isLoading.value = true;
     try {
       final resolved = await CartCache.resolve(userId.value);
@@ -182,9 +181,7 @@ class CartController extends GetxController {
           shippingAddress: shippingAddress,
         );
         if (res['status'] == true) {
-          // Clear the offline mirror unconditionally. It used to survive
-          // checkout, and getResolvedCart prefers whichever side has more
-          // items, so a stale cache could resurrect an emptied cart.
+          // Drop the offline mirror too, or a stale cache resurrects the cart.
           await CartCache.clearLocalCart(userId.value);
           cartItems.clear();
           total.value = 0;

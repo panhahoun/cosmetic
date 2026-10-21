@@ -3,12 +3,9 @@ import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persists the session.
-///
-/// The access token goes in [FlutterSecureStorage] (Keychain on iOS, EncryptedSharedPreferences
-/// on Android). It used to live in SharedPreferences alongside the user id, which writes it in
-/// plaintext to disk. Non-secret profile fields stay in SharedPreferences because the widgets
-/// read them synchronously.
+/// Persists the session. The access token lives in [FlutterSecureStorage]
+/// (Keychain / EncryptedSharedPreferences); non-secret profile fields stay in
+/// SharedPreferences because widgets read them synchronously.
 class SessionStore {
   SessionStore({FlutterSecureStorage? secureStorage})
       : _secure = secureStorage ??
@@ -72,11 +69,9 @@ class SessionStore {
     try {
       await _secure.delete(key: _tokenKey);
     } catch (_) {
-      // Ignore: the in-memory token is already cleared, and a stale keychain
-      // entry is overwritten on the next successful login.
+      // In-memory token is already cleared; the next login overwrites it.
     }
-    // Guarded separately so a prefs failure cannot leave logout half-done
-    // after the token has already been discarded.
+    // Separate guard: a prefs failure must not undo the token clear.
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_idKey);
@@ -84,7 +79,7 @@ class SessionStore {
       await prefs.remove(_emailKey);
       await prefs.remove(_roleKey);
     } catch (_) {
-      // Non-fatal: these are display fields, not credentials.
+      // Display fields only.
     }
   }
 

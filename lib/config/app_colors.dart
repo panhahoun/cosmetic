@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 /// M-Commerce / Cosmetic app palette.
 ///
-/// Intent: clean + feminine + premium + soft. The interface stays mostly
-/// ivory/white; rose is reserved for buttons, selected states, prices and
-/// other important actions so it does not read as "everything is pink".
+/// Mostly ivory/white; rose is reserved for buttons, selected states, prices
+/// and important actions.
 class AppColors {
   const AppColors._();
 

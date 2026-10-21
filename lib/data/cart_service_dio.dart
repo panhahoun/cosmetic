@@ -45,9 +45,7 @@ class CartServiceDio {
         statusCode: e.response?.statusCode,
       );
 
-  /// Cart identity now comes from the bearer token. The `user_id` argument is
-  /// gone because the backend rejects nothing but also ignores it -- keeping it
-  /// would imply the server trusts it.
+  /// Cart identity comes from the bearer token; no user id is sent.
   Future<Map<String, dynamic>> getCart() async {
     try {
       final res = await _dio.get('/cart/get_cart');
@@ -112,8 +110,7 @@ class CartServiceDio {
 
   /// Places an order.
   ///
-  /// Sends an `Idempotency-Key` so that the client-side timeout plus retry
-  /// cannot create a second order for the same cart.
+  /// `Idempotency-Key` stops a retry after a timeout creating a second order.
   Future<Map<String, dynamic>> checkout({
     String paymentMethod = 'cash_on_delivery',
     String? shippingAddress,

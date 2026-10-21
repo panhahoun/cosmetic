@@ -4,11 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Offline mirror of the server cart plus the badge/unread notifiers.
-///
-/// This used to live in `lib/services/cart_service.dart` alongside network
-/// calls to `get_cart.php` / `add_to_cart.php` endpoints that the FastAPI
-/// backend never had. Those methods 404'd on every call. Remote state now
-/// lives in `cart_service_dio.dart`; this class is local-only.
+/// Local-only; remote state lives in `cart_service_dio.dart`.
 class CartCache {
   static String _key(int userId) => 'local_cart_$userId';
 
@@ -56,8 +52,7 @@ class CartCache {
     await refreshCartCount(prefs.getInt('id') ?? 0);
   }
 
-  /// Prefer the server cart, but fall back to the local mirror when it holds
-  /// more items -- that is how an offline add-to-cart stays visible.
+  /// Server cart wins, unless the local mirror holds more items.
   static Future<Map<String, dynamic>> resolve(int userId) async {
     if (userId <= 0) {
       return {'status': true, 'data': <dynamic>[], 'total': 0, 'source': 'local'};
@@ -92,7 +87,7 @@ class CartCache {
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList(growable: true);
     } catch (_) {
-      // Malformed cache: treat as empty rather than wedging the cart screen.
+      // Corrupt cache is treated as empty.
       return [];
     }
   }
@@ -132,8 +127,7 @@ class CartCache {
     await _write(userId, items);
   }
 
-  /// `subtotal` is a string here but a float from the server, so consumers
-  /// must parse defensively rather than assume a type.
+  /// `subtotal` is a string here and a float from the server.
   static Future<Map<String, dynamic>> getLocalCart(int userId) async {
     final items = await _read(userId);
     var total = 0.0;

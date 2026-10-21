@@ -5,9 +5,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../../config/api_config.dart';
 import '../storage/session_store.dart';
 
-/// Paths that must never carry an Authorization header. Attaching a token to
-/// login/register is harmless but noisy; attaching it to a preflight OPTIONS
-/// can trip strict origins.
+/// Paths that never carry an Authorization header (login/register, preflight).
 const _unauthenticatedPaths = {'/auth/login', '/auth/register'};
 
 class DioClient {
@@ -42,8 +40,7 @@ class DioClient {
       ),
     );
 
-    // Response bodies contain order totals and profile data; the logger is a
-    // debug-only affordance so release builds do not write them to logcat.
+    // Debug-only: response bodies hold order totals and profile data.
     if (kDebugMode) {
       _dio.interceptors.add(
         PrettyDioLogger(

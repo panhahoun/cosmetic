@@ -27,7 +27,7 @@ class WishlistCache {
           .map((e) => Product.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     } catch (_) {
-      // Malformed cache: treat as empty rather than wedging the wishlist tab.
+      // Corrupt cache is treated as empty.
       return const <Product>[];
     }
   }

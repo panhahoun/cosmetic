@@ -70,8 +70,7 @@ class AuthService {
       }
       body = data;
     } on DioException catch (e) {
-      // The backend now returns 401 for bad credentials instead of 200 with
-      // status:false, so this branch is the normal failure path.
+      // 401 means the credentials were rejected.
       throw AuthException(
         _errorMessage(e, 'Login failed'),
         statusCode: e.response?.statusCode,
@@ -85,8 +84,7 @@ class AuthService {
     }
 
     final user = User.fromJson(userData);
-    // The token used to be discarded here, which meant every authenticated
-    // request went out anonymous.
+    // Persist the token or every authenticated request goes out anonymous.
     await sessionStore.saveSession(
       token: token,
       id: user.id,

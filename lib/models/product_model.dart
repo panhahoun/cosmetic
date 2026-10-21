@@ -34,9 +34,7 @@ class Product {
       image: json['image']?.toString() ?? '',
       categoryName: (json['category_name'] ?? json['category'] ?? '')
           .toString(),
-      // No fabricated brand/size/rating fallbacks. The backend now sends ""
-      // and 0 for missing values rather than substituting "GlowLab" / "50ml" /
-      // 4.5, which made unrated and unbranded products look real.
+      // No fabricated fallbacks: missing brand/rating stay empty and 0.
       brand: (json['brand'] ?? '').toString(),
       rating: double.tryParse(json['rating']?.toString() ?? '') ?? 0,
       reviewCount: int.tryParse(json['review_count']?.toString() ?? '') ?? 0,

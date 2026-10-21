@@ -36,9 +36,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _logout() async {
-    // Clears the keychain token as well as the profile fields. The old
-    // implementation called SharedPreferences.clear(), which left the stored
-    // access token in place.
+    // Clears the keychain token and the cached profile.
     await AuthService().logout();
     if (!mounted) return;
     Get.offAllNamed(AppRoutes.login);
